@@ -22,4 +22,15 @@ describe("chat layout styles", () => {
     expect(css).toContain("font-size: 20px;");
     expect(css).toContain("place-items: center;");
   });
+
+  it("keeps embedded chat toggle buttons aligned with normal icon controls on hover", () => {
+    const css = readLayoutCss();
+
+    expect(css).toContain(".embed-chat-toggles .btn--icon {");
+    expect(css).toContain("border-color: var(--border);");
+    expect(css).toContain(".embed-chat-toggles .btn--icon:hover {");
+    expect(css).toContain("background: var(--bg-hover);");
+    expect(css).toContain("border-color: var(--border-strong);");
+    expect(css).toContain(':root[data-theme-mode="light"] .embed-chat-toggles .btn--icon:hover {');
+  });
 });

@@ -146,6 +146,7 @@ export type ChatProps = {
   onAgentChange: (agentId: string) => void;
   onNavigateToTab?: (tab: Tab) => void;
   renderModelSelect?: () => unknown;
+  renderEmbedChatToggles?: () => unknown;
   onNavigateToAgent?: () => void;
   onSessionSelect?: (sessionKey: string) => void;
   onOpenSidebar?: (content: SidebarContent) => void;
@@ -1657,7 +1658,7 @@ export function renderChat(props: ChatProps) {
             >
               ${renderEmbedLeftRail(props, requestUpdate)}
               <div class="chat-embed-main">
-                <div class="chat-embed-main__top">${renderEmbedUtilityLinks(props)}</div>
+                <div class="chat-embed-main__top">${renderEmbedUtilityLinks(props)} ${props.renderEmbedChatToggles?.() ?? nothing}</div>
                 <div class="chat-embed-main__body">${conversationSurface}</div>
                 <div class="chat-embed-main__footer">
                   ${props.renderModelSelect?.() ?? nothing} ${composer}

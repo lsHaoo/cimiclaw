@@ -10,6 +10,7 @@ import {
   renderChatMobileToggle,
   renderChatModelSelect,
   renderChatSessionSelect,
+  renderEmbedChatToggles,
   renderTab,
   resolveAssistantAttachmentAuthToken,
   resolveDashboardHeaderContext,
@@ -2549,6 +2550,7 @@ export function renderApp(state: AppViewState) {
                   },
                   onNavigateToTab: (tab) => state.setTab(tab),
                   renderModelSelect: () => renderChatModelSelect(state),
+                  renderEmbedChatToggles: state.embedMode ? () => renderEmbedChatToggles(state) : undefined,
                   onNavigateToAgent: () => {
                     state.agentsSelectedId = resolvedAgentId;
                     state.setTab("agents" as import("./navigation.ts").Tab);
