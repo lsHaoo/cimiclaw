@@ -248,10 +248,6 @@ function getGatewayStartGuardErrors(params: {
   if (params.allowUnconfigured || params.mode === "local") {
     return [];
   }
-  if (params.mode === undefined) {
-    // Treat missing gateway.mode as local when no config exists (packaged distribution).
-    return [];
-  }
   if (!params.configExists) {
     return [
       `Missing config. Run \`${formatCliCommand("openclaw setup")}\` or set gateway.mode=local (or pass --allow-unconfigured).`,
@@ -755,13 +751,11 @@ async function runGatewayCommand(opts: GatewayRunOpts) {
       "Gateway auth mode=none explicitly configured; all gateway connections are unauthenticated.",
     );
   }
-  const allowInsecurePrivateGateway = process.env.OPENCLAW_ALLOW_INSECURE_PRIVATE_WS === "1";
   if (
     bind !== "loopback" &&
     !hasSharedSecret &&
     !canBootstrapToken &&
-    resolvedAuthMode !== "trusted-proxy" &&
-    !allowInsecurePrivateGateway
+    resolvedAuthMode !== "trusted-proxy"
   ) {
     defaultRuntime.error(
       [
@@ -781,11 +775,6 @@ async function runGatewayCommand(opts: GatewayRunOpts) {
     );
     defaultRuntime.exit(EXIT_CONFIG_ERROR);
     return;
-  }
-  if (bind !== "loopback" && !hasSharedSecret && allowInsecurePrivateGateway) {
-    gatewayLog.warn(
-      "OPENCLAW_ALLOW_INSECURE_PRIVATE_WS=1: binding gateway beyond loopback without auth for trusted private-network testing.",
-    );
   }
   const tailscaleOverride =
     tailscaleMode || opts.tailscaleResetOnExit

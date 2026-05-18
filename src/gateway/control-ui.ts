@@ -175,16 +175,9 @@ function controlUiAvatarResolutionMeta(resolved: ControlUiAvatarResolution | nul
   };
 }
 
-function allowInsecureControlUiEmbedding(): boolean {
-  return process.env.OPENCLAW_ALLOW_INSECURE_PRIVATE_WS === "1";
-}
-
 function applyControlUiSecurityHeaders(res: ServerResponse) {
-  const allowFrameAncestors = allowInsecureControlUiEmbedding();
-  if (!allowFrameAncestors) {
-    res.setHeader("X-Frame-Options", "DENY");
-  }
-  res.setHeader("Content-Security-Policy", buildControlUiCspHeader({ allowFrameAncestors }));
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Content-Security-Policy", buildControlUiCspHeader());
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Referrer-Policy", "no-referrer");
 }
@@ -728,10 +721,7 @@ function serveResolvedIndexHtml(res: ServerResponse, body: string) {
   if (hashes.length > 0) {
     res.setHeader(
       "Content-Security-Policy",
-      buildControlUiCspHeader({
-        inlineScriptHashes: hashes,
-        allowFrameAncestors: allowInsecureControlUiEmbedding(),
-      }),
+      buildControlUiCspHeader({ inlineScriptHashes: hashes }),
     );
   }
   res.setHeader("Content-Type", "text/html; charset=utf-8");

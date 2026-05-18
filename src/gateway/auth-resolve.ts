@@ -86,7 +86,7 @@ export function resolveGatewayAuth(params: {
     mode = "token";
     modeSource = "token";
   } else {
-    mode = "none";
+    mode = "token";
     modeSource = "default";
   }
 

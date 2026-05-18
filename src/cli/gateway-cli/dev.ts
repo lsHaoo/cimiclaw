@@ -106,15 +106,11 @@ export async function ensureDevGatewayConfig(opts: { reset?: boolean }) {
       gateway: {
         mode: "local",
         bind: "loopback",
-        auth: {
-          mode: "none",
-        },
       },
       agents: {
         defaults: {
           workspace,
           skipBootstrap: true,
-          model: "zai/glm-5.1",
         },
         list: [
           {
