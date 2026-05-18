@@ -18,8 +18,9 @@
   box-shadow: none !important;
 }
 
-.chat--embed {
+.card.chat.chat--embed {
   min-height: 100%;
+  padding: 0;
 }
 
 .chat-embed-shell {
