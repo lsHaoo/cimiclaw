@@ -784,6 +784,52 @@ function collectAttemptExplicitToolAllowlistSources(params: {
   ]);
 }
 
+/**
+ * Resolve content capture policy from diagnostics config.
+ * Checks both langfuse.captureContent and otel.captureContent.
+ * Returns undefined if content capture is not enabled for any exporter.
+ */
+function resolveDiagnosticContentCapture(
+  config?: EmbeddedRunAttemptParams["config"],
+): { inputMessages: boolean; outputMessages: boolean; systemPrompt: boolean } | undefined {
+  const diag = config?.diagnostics;
+  if (!diag) return undefined;
+
+  // Check langfuse first
+  const langfuse = diag.langfuse;
+  if (langfuse?.enabled && langfuse.captureContent) {
+    const cc = langfuse.captureContent;
+    if (cc === true) {
+      return { inputMessages: true, outputMessages: true, systemPrompt: false };
+    }
+    if (typeof cc === "object") {
+      return {
+        inputMessages: cc.inputMessages ?? cc.enabled ?? false,
+        outputMessages: cc.outputMessages ?? cc.enabled ?? false,
+        systemPrompt: cc.systemPrompt ?? false,
+      };
+    }
+  }
+
+  // Fall back to otel captureContent
+  const otel = diag.otel;
+  if (otel?.captureContent) {
+    const cc = otel.captureContent;
+    if (cc === true) {
+      return { inputMessages: true, outputMessages: true, systemPrompt: false };
+    }
+    if (typeof cc === "object") {
+      return {
+        inputMessages: cc.inputMessages ?? cc.enabled ?? false,
+        outputMessages: cc.outputMessages ?? cc.enabled ?? false,
+        systemPrompt: cc.systemPrompt ?? false,
+      };
+    }
+  }
+
+  return undefined;
+}
+
 export async function runEmbeddedAttempt(
   params: EmbeddedRunAttemptParams,
 ): Promise<EmbeddedRunAttemptResult> {
@@ -2392,6 +2438,7 @@ export async function runEmbeddedAttempt(
         );
       }
       let diagnosticModelCallSeq = 0;
+      const diagnosticsCaptureContent = resolveDiagnosticContentCapture(params.config);
       activeSession.agent.streamFn = wrapStreamFnWithDiagnosticModelCallEvents(
         activeSession.agent.streamFn,
         {
@@ -2412,6 +2459,12 @@ export async function runEmbeddedAttempt(
               firstModelCallStarted: true,
             });
           },
+          ...(diagnosticsCaptureContent
+            ? {
+                captureContent: diagnosticsCaptureContent,
+                systemPromptProvider: () => systemPromptText || undefined,
+              }
+            : {}),
         },
       );
 

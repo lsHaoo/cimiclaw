@@ -27,7 +27,8 @@ function createServiceContext(params: {
   const isDiagnosticsExporter =
     params.service?.pluginId === params.service?.service.id &&
     (params.service?.service.id === "diagnostics-otel" ||
-      params.service?.service.id === "diagnostics-prometheus");
+      params.service?.service.id === "diagnostics-prometheus" ||
+      params.service?.service.id === "diagnostics-langfuse");
   const grantsInternalDiagnostics =
     isDiagnosticsExporter &&
     (params.service?.origin === "bundled" || params.service?.trustedOfficialInstall === true);

@@ -1,0 +1,11 @@
+{
+  "id": "diagnostics-langfuse",
+  "activation": {
+    "onStartup": true
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}
