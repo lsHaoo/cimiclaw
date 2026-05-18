@@ -871,14 +871,18 @@ describe("chat welcome", () => {
   });
 
   it("renders the branded embed welcome state", () => {
-    const container = renderWelcome({ assistantAvatar: null, assistantAvatarUrl: null, embedMode: true });
+    const container = renderWelcome({
+      assistantAvatar: null,
+      assistantAvatarUrl: null,
+      embedMode: true,
+    });
 
     expect(container.querySelector(".chat-embed-welcome__copy")?.textContent).toContain(
       "CimiClaw已就位，有新的任务安排吗",
     );
-    expect(container.querySelector<HTMLImageElement>(".chat-embed-welcome__logo")?.getAttribute("src")).toBe(
-      "/chat-claw-logo.png",
-    );
+    expect(
+      container.querySelector<HTMLImageElement>(".chat-embed-welcome__logo")?.getAttribute("src"),
+    ).toBe("/chat-claw-logo.png");
   });
 });
 
@@ -909,11 +913,59 @@ describe("chat embed shell", () => {
     sessionButton?.click();
     expect(onSessionSelect).toHaveBeenCalledWith("agent:main:plan");
 
-    const skillsButton = Array.from(container.querySelectorAll<HTMLButtonElement>(".chat-embed-links__item")).find(
-      (button) => button.textContent?.includes("Skills"),
-    );
+    const skillsButton = Array.from(
+      container.querySelectorAll<HTMLButtonElement>(".chat-embed-links__item"),
+    ).find((button) => button.textContent?.includes("Skills"));
     skillsButton?.click();
     expect(onNavigateToTab).toHaveBeenCalledWith("skills");
+  });
+
+  it("toggles the embed rail collapsed state via the collapse button", () => {
+    const embedProps = {
+      embedMode: true,
+      sessions: {
+        ts: 0,
+        path: "",
+        count: 0,
+        defaults: { modelProvider: "openai", model: "gpt-5", contextTokens: null },
+        sessions: [],
+      },
+    } as const;
+
+    // Expanded: collapse button visible, new-session button visible, no collapsed shell class
+    let container = renderChatView(embedProps);
+    const shell = container.querySelector(".chat-embed-shell");
+    const collapseButton = container.querySelector<HTMLButtonElement>(".chat-embed-rail__collapse");
+
+    expect(collapseButton).toBeInstanceOf(HTMLButtonElement);
+    expect(shell?.classList.contains("chat-embed-shell--rail-collapsed")).toBe(false);
+    expect(container.querySelector(".chat-embed-rail__new")).not.toBeNull();
+
+    collapseButton!.click();
+
+    // Re-render to reflect module-level vs state change
+    container = renderChatView(embedProps);
+
+    // Collapsed: shell gets collapsed class, new-session button hidden, collapse button still present
+    const collapsedShell = container.querySelector(".chat-embed-shell");
+    expect(collapsedShell?.classList.contains("chat-embed-shell--rail-collapsed")).toBe(true);
+    expect(container.querySelector(".chat-embed-rail__new")).toBeNull();
+    expect(
+      container
+        .querySelector<HTMLButtonElement>(".chat-embed-rail__collapse")
+        ?.getAttribute("title"),
+    ).toBe("展开会话列表");
+
+    // Click again to expand
+    container.querySelector<HTMLButtonElement>(".chat-embed-rail__collapse")!.click();
+    container = renderChatView(embedProps);
+
+    expect(
+      container
+        .querySelector(".chat-embed-shell")
+        ?.classList.contains("chat-embed-shell--rail-collapsed"),
+    ).toBe(false);
+    expect(container.querySelector(".chat-embed-rail__new")?.textContent).toContain("新对话");
   });
 });
 

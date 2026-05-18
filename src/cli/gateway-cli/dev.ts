@@ -114,6 +114,7 @@ export async function ensureDevGatewayConfig(opts: { reset?: boolean }) {
         defaults: {
           workspace,
           skipBootstrap: true,
+          model: "zai/glm-5.1",
         },
         list: [
           {

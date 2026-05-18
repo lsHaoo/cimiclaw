@@ -18,6 +18,8 @@
     }
     .toolbar button:hover { background: #1a4a8a; }
     .toolbar button.active { background: #e94560; border-color: #e94560; }
+    .gateway-url { font-size: 12px; color: #8b949e; }
+    .gateway-url code { color: #e0e0e0; }
     #log {
       position: fixed; bottom: 0; left: 0; right: 0;
       max-height: 120px; overflow-y: auto;
@@ -43,14 +45,16 @@
     <button onclick="sendNav('cron')" id="btn-cron">Cron</button>
     <button onclick="sendNav('sessions')" id="btn-sessions">Sessions</button>
     <button onclick="sendNav('appearance')" id="btn-appearance">外观与设置</button>
-    <span style="margin-left:auto;font-size:12px;color:#8b949e;">
+    <span class="gateway-url" style="margin-left:auto;">
+      iframe: <code id="gateway-url"></code>
+    </span>
+    <span style="font-size:12px;color:#8b949e;">
       Send <code>openclaw:navigate</code> messages to iframe
     </span>
   </div>
 
   <iframe
     id="chat-frame"
-    src="http://localhost:5173/chat?embed=1"
     allow="clipboard-write"
   ></iframe>
 
@@ -59,7 +63,30 @@
   <script>
     const frame = document.getElementById("chat-frame");
     const logEl = document.getElementById("log");
+    const gatewayUrlEl = document.getElementById("gateway-url");
     const ALLOWED_TABS = ["chat", "skills", "usage", "cron", "sessions", "appearance"];
+    const DEFAULT_GATEWAY_PORT = "18789";
+
+    function resolveGatewayOrigin() {
+      const params = new URLSearchParams(window.location.search);
+      const explicit = params.get("gateway") || params.get("origin");
+      if (explicit) {
+        return explicit.replace(/\/$/, "");
+      }
+
+      // When this host page is served from an intranet host, embed the gateway on
+      // the same host. When opened as file://, fall back to local development.
+      if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+        const protocol = window.location.protocol === "https:" ? "https:" : "http:";
+        return `${protocol}//${window.location.hostname}:${DEFAULT_GATEWAY_PORT}`;
+      }
+      return `http://127.0.0.1:${DEFAULT_GATEWAY_PORT}`;
+    }
+
+    const gatewayOrigin = resolveGatewayOrigin();
+    const iframeSrc = `${gatewayOrigin}/chat?session=agent%3Amain%3Amain&embed=1`;
+    frame.src = iframeSrc;
+    gatewayUrlEl.textContent = iframeSrc;
 
     function log(text, cls = "") {
       const div = document.createElement("div");
@@ -72,7 +99,7 @@
     function sendNav(tab) {
       if (!ALLOWED_TABS.includes(tab)) return;
       const payload = { type: "openclaw:navigate", payload: { tab } };
-      frame.contentWindow.postMessage(payload, "*");
+      frame.contentWindow.postMessage(payload, gatewayOrigin);
       log(`→ navigate: ${tab}`, "out");
 
       // Update active button
@@ -87,7 +114,8 @@
       log(`← ${JSON.stringify(event.data)}`, "in");
     });
 
-    log("Test page loaded. iframe src: http://localhost:5173/chat?embed=1");
+    log(`Test page loaded. iframe src: ${iframeSrc}`);
+    log(`Override gateway with: ?gateway=http://<host-ip>:18789`);
     log("Click toolbar buttons to navigate the embedded chat.");
   </script>
 </body>

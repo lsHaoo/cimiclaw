@@ -32,7 +32,10 @@ function hasScriptSrcAttribute(openTag: string): boolean {
   );
 }
 
-export function buildControlUiCspHeader(opts?: { inlineScriptHashes?: string[] }): string {
+export function buildControlUiCspHeader(opts?: {
+  inlineScriptHashes?: string[];
+  allowFrameAncestors?: boolean;
+}): string {
   const hashes = opts?.inlineScriptHashes;
   const scriptSrc = hashes?.length
     ? `script-src 'self' ${hashes.map((h) => `'${h}'`).join(" ")}`
@@ -41,7 +44,7 @@ export function buildControlUiCspHeader(opts?: { inlineScriptHashes?: string[] }
     "default-src 'self'",
     "base-uri 'none'",
     "object-src 'none'",
-    "frame-ancestors 'none'",
+    opts?.allowFrameAncestors ? "frame-ancestors * http: https: file:" : "frame-ancestors 'none'",
     scriptSrc,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: blob:",

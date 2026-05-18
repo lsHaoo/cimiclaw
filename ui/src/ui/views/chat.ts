@@ -4,7 +4,6 @@ import { ref } from "lit/directives/ref.js";
 import { repeat } from "lit/directives/repeat.js";
 import { t } from "../../i18n/index.ts";
 import type { CompactionStatus, FallbackStatus } from "../app-tool-stream.ts";
-import { formatRelativeTimestamp } from "../format.ts";
 import {
   getChatAttachmentPreviewUrl,
   registerChatAttachmentPayload,
@@ -31,8 +30,8 @@ import { PinnedMessages } from "../chat/pinned-messages.ts";
 import { getPinnedMessageSummary } from "../chat/pinned-summary.ts";
 import type { RealtimeTalkStatus } from "../chat/realtime-talk.ts";
 import { renderChatRunControls } from "../chat/run-controls.ts";
-import { isCronSessionKey, resolveSessionDisplayName } from "../chat/session-controls.ts";
 import { getOrCreateSessionCacheValue } from "../chat/session-cache.ts";
+import { isCronSessionKey, resolveSessionDisplayName } from "../chat/session-controls.ts";
 import { renderSideResult } from "../chat/side-result-render.ts";
 import type { ChatSideResult } from "../chat/side-result.ts";
 import {
@@ -46,6 +45,7 @@ import {
 import { renderCompactionIndicator, renderFallbackIndicator } from "../chat/status-indicators.ts";
 import { getExpandedToolCards, syncToolCardExpansionState } from "../chat/tool-expansion-state.ts";
 import type { EmbedSandboxMode } from "../embed-sandbox.ts";
+import { formatRelativeTimestamp } from "../format.ts";
 import { icons } from "../icons.ts";
 import type { Tab } from "../navigation.ts";
 import type { SidebarContent } from "../sidebar-content.ts";
@@ -293,6 +293,7 @@ interface ChatEphemeralState {
   pinnedExpanded: boolean;
   embedRailQuery: string;
   embedRailSection: "history" | "cron";
+  embedRailCollapsed: boolean;
 }
 
 function createChatEphemeralState(): ChatEphemeralState {
@@ -309,6 +310,7 @@ function createChatEphemeralState(): ChatEphemeralState {
     pinnedExpanded: false,
     embedRailQuery: "",
     embedRailSection: "history",
+    embedRailCollapsed: false,
   };
 }
 
@@ -337,7 +339,11 @@ function matchesRailQuery(query: string, ...values: Array<string | number | null
   if (!query) {
     return true;
   }
-  return values.some((value) => String(value ?? "").toLowerCase().includes(query));
+  return values.some((value) =>
+    String(value ?? "")
+      .toLowerCase()
+      .includes(query),
+  );
 }
 
 function renderEmbedUtilityLinks(props: ChatProps) {
@@ -346,10 +352,18 @@ function renderEmbedUtilityLinks(props: ChatProps) {
   }
   return html`
     <div class="chat-embed-links">
-      <button type="button" class="chat-embed-links__item" @click=${() => props.onNavigateToTab?.("skills")}>
+      <button
+        type="button"
+        class="chat-embed-links__item"
+        @click=${() => props.onNavigateToTab?.("skills")}
+      >
         Skills
       </button>
-      <button type="button" class="chat-embed-links__item" @click=${() => props.onNavigateToTab?.("usage")}>
+      <button
+        type="button"
+        class="chat-embed-links__item"
+        @click=${() => props.onNavigateToTab?.("usage")}
+      >
         使用情况
       </button>
     </div>
@@ -365,102 +379,130 @@ function renderEmbedLeftRail(props: ChatProps, requestUpdate: () => void) {
     .filter((row) => !isCronSessionKey(row.key))
     .sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0))
     .filter((row) =>
-      matchesRailQuery(query, row.key, row.label, row.sessionId, row.modelProvider, row.model)
+      matchesRailQuery(query, row.key, row.label, row.sessionId, row.modelProvider, row.model),
     );
   const cronJobs = [...(props.cronJobs ?? [])]
-    .sort((a, b) => (a.state?.nextRunAtMs ?? Number.MAX_SAFE_INTEGER) - (b.state?.nextRunAtMs ?? Number.MAX_SAFE_INTEGER))
+    .sort(
+      (a, b) =>
+        (a.state?.nextRunAtMs ?? Number.MAX_SAFE_INTEGER) -
+        (b.state?.nextRunAtMs ?? Number.MAX_SAFE_INTEGER),
+    )
     .filter((job) => matchesRailQuery(query, job.id, job.name, job.description));
   const showHistory = vs.embedRailSection === "history";
+  const railCollapsed = vs.embedRailCollapsed;
 
   return html`
-    <aside class="chat-embed-rail">
-      <div class="chat-embed-rail__brand">CimiClaw</div>
-      <button
-        type="button"
-        class="chat-embed-rail__new"
-        ?disabled=${!props.connected}
-        @click=${props.onNewSession}
-      >
-        <span aria-hidden="true">＋</span>
-        新对话
-      </button>
-
-      <div class="chat-embed-rail__tabs">
+    <aside class="chat-embed-rail ${railCollapsed ? "chat-embed-rail--collapsed" : ""}">
+      <div class="chat-embed-rail__header">
+        ${railCollapsed ? nothing : html`<div class="chat-embed-rail__brand">CimiClaw</div>`}
         <button
           type="button"
-          class="chat-embed-rail__tab ${showHistory ? "chat-embed-rail__tab--active" : ""}"
+          class="chat-embed-rail__collapse"
           @click=${() => {
-            vs.embedRailSection = "history";
+            vs.embedRailCollapsed = !railCollapsed;
             requestUpdate();
           }}
+          title=${railCollapsed ? "展开会话列表" : "收起会话列表"}
+          aria-label=${railCollapsed ? "展开会话列表" : "收起会话列表"}
         >
-          历史对话
-        </button>
-        <button
-          type="button"
-          class="chat-embed-rail__tab ${!showHistory ? "chat-embed-rail__tab--active" : ""}"
-          @click=${() => {
-            vs.embedRailSection = "cron";
-            requestUpdate();
-          }}
-        >
-          定时任务
+          <span class="chat-embed-rail__collapse-icon" aria-hidden="true"
+            >${railCollapsed ? icons.panelLeftOpen : icons.panelLeftClose}</span
+          >
         </button>
       </div>
 
-      <label class="chat-embed-rail__search">
-        <input
-          type="search"
-          .value=${vs.embedRailQuery}
-          placeholder="搜索对话"
-          @input=${(event: Event) => {
-            vs.embedRailQuery = (event.target as HTMLInputElement).value;
-            requestUpdate();
-          }}
-        />
-      </label>
+      ${railCollapsed
+        ? nothing
+        : html`<button
+              type="button"
+              class="chat-embed-rail__new"
+              ?disabled=${!props.connected}
+              @click=${props.onNewSession}
+            >
+              <span aria-hidden="true">＋</span>
+              新对话
+            </button>
 
-      <div class="chat-embed-rail__list">
-        ${showHistory
-          ? sessions.length
-            ? sessions.map(
-                (row) => html`
-                  <button
-                    type="button"
-                    class="chat-embed-rail__item ${row.key === props.sessionKey
-                      ? "chat-embed-rail__item--active"
-                      : ""}"
-                    @click=${() => props.onSessionSelect?.(row.key)}
-                  >
-                    <span class="chat-embed-rail__item-title"
-                      >${resolveSessionDisplayName(row.key, row)}</span
-                    >
-                    <span class="chat-embed-rail__item-meta"
-                      >${row.updatedAt ? formatRelativeTimestamp(row.updatedAt) : row.key}</span
-                    >
-                  </button>
-                `,
-              )
-            : html`<div class="chat-embed-rail__empty">暂无历史对话</div>`
-          : cronJobs.length
-            ? cronJobs.map(
-                (job) => html`
-                  <button
-                    type="button"
-                    class="chat-embed-rail__item"
-                    @click=${() => props.onNavigateToTab?.("cron")}
-                  >
-                    <span class="chat-embed-rail__item-title">${job.name?.trim() || job.id}</span>
-                    <span class="chat-embed-rail__item-meta"
-                      >${job.state?.nextRunAtMs
-                        ? `下次执行 ${formatRelativeTimestamp(job.state.nextRunAtMs)}`
-                        : job.description?.trim() || "等待调度"}</span
-                    >
-                  </button>
-                `,
-              )
-            : html`<div class="chat-embed-rail__empty">暂无定时任务</div>`}
-      </div>
+            <div class="chat-embed-rail__tabs">
+              <button
+                type="button"
+                class="chat-embed-rail__tab ${showHistory ? "chat-embed-rail__tab--active" : ""}"
+                @click=${() => {
+                  vs.embedRailSection = "history";
+                  requestUpdate();
+                }}
+              >
+                历史对话
+              </button>
+              <button
+                type="button"
+                class="chat-embed-rail__tab ${!showHistory ? "chat-embed-rail__tab--active" : ""}"
+                @click=${() => {
+                  vs.embedRailSection = "cron";
+                  requestUpdate();
+                }}
+              >
+                定时任务
+              </button>
+            </div>
+
+            <label class="chat-embed-rail__search">
+              <input
+                type="search"
+                .value=${vs.embedRailQuery}
+                placeholder="搜索对话"
+                @input=${(event: Event) => {
+                  vs.embedRailQuery = (event.target as HTMLInputElement).value;
+                  requestUpdate();
+                }}
+              />
+            </label>
+
+            <div class="chat-embed-rail__list">
+              ${showHistory
+                ? sessions.length
+                  ? sessions.map(
+                      (row) => html`
+                        <button
+                          type="button"
+                          class="chat-embed-rail__item ${row.key === props.sessionKey
+                            ? "chat-embed-rail__item--active"
+                            : ""}"
+                          @click=${() => props.onSessionSelect?.(row.key)}
+                        >
+                          <span class="chat-embed-rail__item-title"
+                            >${resolveSessionDisplayName(row.key, row)}</span
+                          >
+                          <span class="chat-embed-rail__item-meta"
+                            >${row.updatedAt
+                              ? formatRelativeTimestamp(row.updatedAt)
+                              : row.key}</span
+                          >
+                        </button>
+                      `,
+                    )
+                  : html`<div class="chat-embed-rail__empty">暂无历史对话</div>`
+                : cronJobs.length
+                  ? cronJobs.map(
+                      (job) => html`
+                        <button
+                          type="button"
+                          class="chat-embed-rail__item"
+                          @click=${() => props.onNavigateToTab?.("cron")}
+                        >
+                          <span class="chat-embed-rail__item-title"
+                            >${job.name?.trim() || job.id}</span
+                          >
+                          <span class="chat-embed-rail__item-meta"
+                            >${job.state?.nextRunAtMs
+                              ? `下次执行 ${formatRelativeTimestamp(job.state.nextRunAtMs)}`
+                              : job.description?.trim() || "等待调度"}</span
+                          >
+                        </button>
+                      `,
+                    )
+                  : html`<div class="chat-embed-rail__empty">暂无定时任务</div>`}
+            </div> `}
     </aside>
   `;
 }
@@ -1074,10 +1116,10 @@ export function renderChat(props: ChatProps) {
   const placeholder = props.embedMode
     ? "告诉我要做的事情或者是任务"
     : props.connected
-    ? hasAttachments
-      ? "Add a message or paste more images..."
-      : `Message ${props.assistantName || "agent"} (Enter to send)`
-    : "Connect to the gateway to start chatting...";
+      ? hasAttachments
+        ? "Add a message or paste more images..."
+        : `Message ${props.assistantName || "agent"} (Enter to send)`
+      : "Connect to the gateway to start chatting...";
 
   const requestUpdate = props.onRequestUpdate ?? (() => {});
   const splitRatio = props.splitRatio ?? 0.6;
@@ -1563,8 +1605,7 @@ export function renderChat(props: ChatProps) {
 
   const conversationSurface = html`
     ${renderSearchBar(requestUpdate)} ${renderPinnedSection(props, pinned, requestUpdate)}
-    ${splitView}
-    ${postThreadContent}
+    ${splitView} ${postThreadContent}
   `;
 
   return html`
@@ -1609,14 +1650,17 @@ export function renderChat(props: ChatProps) {
         : nothing}
       ${props.embedMode
         ? html`
-            <div class="chat-embed-shell">
+            <div
+              class="chat-embed-shell ${vs.embedRailCollapsed
+                ? "chat-embed-shell--rail-collapsed"
+                : ""}"
+            >
               ${renderEmbedLeftRail(props, requestUpdate)}
               <div class="chat-embed-main">
                 <div class="chat-embed-main__top">${renderEmbedUtilityLinks(props)}</div>
                 <div class="chat-embed-main__body">${conversationSurface}</div>
                 <div class="chat-embed-main__footer">
-                  ${props.renderModelSelect?.() ?? nothing}
-                  ${composer}
+                  ${props.renderModelSelect?.() ?? nothing} ${composer}
                 </div>
               </div>
             </div>
