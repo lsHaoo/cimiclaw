@@ -33,4 +33,12 @@ describe("chat layout styles", () => {
     expect(css).toContain("border-color: var(--border-strong);");
     expect(css).toContain(':root[data-theme-mode="light"] .embed-chat-toggles .btn--icon:hover {');
   });
+
+  it("disables default svg stroke styling for the embedded restart icon", () => {
+    const css = readLayoutCss();
+
+    expect(css).toContain(".embed-chat-toggles .embed-chat-restart-icon {");
+    expect(css).toContain(".embed-chat-toggles .embed-chat-restart-icon path {");
+    expect(css).toContain("stroke: none;");
+  });
 });

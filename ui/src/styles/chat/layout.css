@@ -1598,6 +1598,16 @@
   color: var(--accent);
 }
 
+.embed-chat-toggles .embed-chat-restart-icon {
+  fill: currentColor;
+  stroke: none;
+}
+
+.embed-chat-toggles .embed-chat-restart-icon path {
+  fill: currentColor;
+  stroke: none;
+}
+
 :root[data-theme-mode="light"] .embed-chat-toggles .btn--icon:hover {
   background: var(--bg-hover);
   border-color: var(--border-strong);

@@ -1,7 +1,11 @@
 import { render } from "lit";
 import { describe, expect, it, vi } from "vitest";
 import { t } from "../i18n/index.ts";
-import { renderChatControls, renderChatMobileToggle } from "./app-render.helpers.ts";
+import {
+  renderChatControls,
+  renderChatMobileToggle,
+  renderEmbedChatToggles,
+} from "./app-render.helpers.ts";
 import type { AppViewState } from "./app-view-state.ts";
 import type { SessionsListResult } from "./types.ts";
 
@@ -170,6 +174,48 @@ describe("chat header controls (browser)", () => {
     cronButton.click();
 
     expect(state.sessionsHideCron).toBe(false);
+  });
+
+  it("renders the embed restart button first and posts to the parent window", async () => {
+    const state = createState();
+    const parentPostMessage = vi.fn();
+    const originalWindow = globalThis.window;
+    const container = document.createElement("div");
+
+    Object.defineProperty(globalThis, "window", {
+      configurable: true,
+      value: {
+        ...originalWindow,
+        parent: {
+          ...(originalWindow?.parent ?? {}),
+          postMessage: parentPostMessage,
+        },
+      },
+    });
+
+    try {
+      render(renderEmbedChatToggles(state), container);
+      await Promise.resolve();
+
+      const buttons = Array.from(
+        container.querySelectorAll<HTMLButtonElement>(".embed-chat-toggles .btn--icon"),
+      );
+
+      expect(buttons).toHaveLength(3);
+      const restartButton = requireButton(buttons[0], "embed restart");
+      expect(restartButton.classList.contains("active")).toBe(true);
+      expect(restartButton.getAttribute("title")).toBe("重启服务");
+      expect(restartButton.getAttribute("aria-label")).toBe("重启服务");
+
+      restartButton.click();
+
+      expect(parentPostMessage).toHaveBeenCalledWith("cimiclaw:web:restart-service", "*");
+    } finally {
+      Object.defineProperty(globalThis, "window", {
+        configurable: true,
+        value: originalWindow,
+      });
+    }
   });
 
   it("uses the shared chat session controls in the mobile dropdown", async () => {

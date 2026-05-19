@@ -335,7 +335,7 @@ export function renderChatControls(state: AppViewState) {
   return html`
     <div class="chat-controls">
       <button
-        class="btn btn--sm btn--icon"
+        class="btn btn--sm btn--icon active"
         ?disabled=${refreshDisabled}
         @click=${() => handleChatManualRefresh(state as unknown as ChatRefreshHost)}
         title=${refreshLabel}
@@ -582,6 +582,22 @@ export function renderEmbedChatToggles(state: AppViewState) {
   const disableThinkingToggle = state.onboarding;
   const showThinking = state.onboarding ? false : state.settings.chatShowThinking;
   const showToolCalls = state.onboarding ? true : state.settings.chatShowToolCalls;
+  const restartServiceIcon = html`
+    <svg
+      class="embed-chat-restart-icon"
+      width="18"
+      height="18"
+      viewBox="0 0 1024 1024"
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M675.4 498.3c8.5 7.5 8.5 19.8 0 27.4L420.5 737c-4.2 3.8-9.3 5.4-14.3 5.4-10.8 0-21-7.6-21-19V300.5c0-11.5 10.2-19 21-19 5 0 10.1 1.7 14.3 5.4l254.9 211.4zM877.7 512c0-222.2-180.1-402.3-402.3-402.3S73.1 289.8 73.1 512s180.1 402.3 402.3 402.3c80.8 0 156-23.8 219.1-64.8l44.3 58.4c-75.4 50.2-165.9 79.5-263.3 79.5C212.9 987.4 0 774.6 0 512S212.9 36.6 475.4 36.6 950.9 249.4 950.9 512h73.1L914.3 694.9 804.6 512h73.1z"
+        fill="currentColor"
+        stroke="none"
+      ></path>
+    </svg>
+  `;
   const toolCallsIcon = html`
     <svg
       width="18"
@@ -600,6 +616,16 @@ export function renderEmbedChatToggles(state: AppViewState) {
   `;
   return html`
     <div class="chat-controls__thinking embed-chat-toggles">
+      <button
+        class="btn btn--sm btn--icon active"
+        @click=${() => {
+          globalThis.window?.parent?.postMessage("cimiclaw:web:restart-service", "*");
+        }}
+        aria-label="重启服务"
+        title="重启服务"
+      >
+        ${restartServiceIcon}
+      </button>
       <button
         class="btn btn--sm btn--icon ${showThinking ? "active" : ""}"
         ?disabled=${disableThinkingToggle}
