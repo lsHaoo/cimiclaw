@@ -365,7 +365,7 @@ function renderEmbedUtilityLinks(props: ChatProps) {
         class="chat-embed-links__item"
         @click=${() => props.onNavigateToTab?.("usage")}
       >
-        使用情况
+        计量
       </button>
     </div>
   `;
@@ -1569,15 +1569,21 @@ export function renderChat(props: ChatProps) {
             ${icons.paperclip}
           </button>
 
-          ${props.onToggleRealtimeTalkOptions
+          ${props.onToggleRealtimeTalkOptions || (props.embedMode && props.onNavigateToTab)
             ? html`
                 <button
                   class="agent-chat__input-btn ${props.realtimeTalkOptionsOpen
                     ? "agent-chat__input-btn--active"
                     : ""}"
-                  @click=${props.onToggleRealtimeTalkOptions}
-                  title="Talk options"
-                  aria-label="Talk options"
+                  @click=${() => {
+                    if (props.embedMode) {
+                      props.onNavigateToTab?.("config");
+                      return;
+                    }
+                    props.onToggleRealtimeTalkOptions?.();
+                  }}
+                  title=${props.embedMode ? "配置" : "Talk options"}
+                  aria-label=${props.embedMode ? "配置" : "Talk options"}
                   ?disabled=${!props.connected}
                 >
                   ${icons.settings}

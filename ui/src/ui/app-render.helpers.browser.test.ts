@@ -206,6 +206,12 @@ describe("chat header controls (browser)", () => {
       expect(restartButton.classList.contains("active")).toBe(true);
       expect(restartButton.getAttribute("title")).toBe("重启服务");
       expect(restartButton.getAttribute("aria-label")).toBe("重启服务");
+      expect(restartButton.getAttribute("data-tooltip")).toBe("重启服务");
+
+      for (const button of buttons) {
+        expect(button.getAttribute("title")).toBe(button.getAttribute("data-tooltip"));
+        expect(button.getAttribute("aria-label")).toBe(button.getAttribute("data-tooltip"));
+      }
 
       restartButton.click();
 

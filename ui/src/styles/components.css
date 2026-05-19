@@ -817,13 +817,16 @@
   user-select: none;
 }
 
-.chat-controls .btn--icon[data-tooltip] {
+.chat-controls .btn--icon[data-tooltip],
+.embed-chat-toggles .btn--icon[data-tooltip] {
   position: relative;
   overflow: visible;
 }
 
 .chat-controls .btn--icon[data-tooltip]::before,
-.chat-controls .btn--icon[data-tooltip]::after {
+.chat-controls .btn--icon[data-tooltip]::after,
+.embed-chat-toggles .btn--icon[data-tooltip]::before,
+.embed-chat-toggles .btn--icon[data-tooltip]::after {
   position: absolute;
   left: 50%;
   pointer-events: none;
@@ -834,7 +837,8 @@
   z-index: 40;
 }
 
-.chat-controls .btn--icon[data-tooltip]::before {
+.chat-controls .btn--icon[data-tooltip]::before,
+.embed-chat-toggles .btn--icon[data-tooltip]::before {
   content: "";
   top: calc(100% + 4px);
   border-width: 6px;
@@ -843,7 +847,8 @@
   transform: translate(-50%, -3px);
 }
 
-.chat-controls .btn--icon[data-tooltip]::after {
+.chat-controls .btn--icon[data-tooltip]::after,
+.embed-chat-toggles .btn--icon[data-tooltip]::after {
   content: attr(data-tooltip);
   top: calc(100% + 10px);
   min-width: max-content;
@@ -866,29 +871,37 @@
 
 @media (hover: hover) {
   .chat-controls .btn--icon[data-tooltip]:hover::before,
-  .chat-controls .btn--icon[data-tooltip]:hover::after {
+  .chat-controls .btn--icon[data-tooltip]:hover::after,
+  .embed-chat-toggles .btn--icon[data-tooltip]:hover::before,
+  .embed-chat-toggles .btn--icon[data-tooltip]:hover::after {
     opacity: 1;
   }
 
-  .chat-controls .btn--icon[data-tooltip]:hover::before {
+  .chat-controls .btn--icon[data-tooltip]:hover::before,
+  .embed-chat-toggles .btn--icon[data-tooltip]:hover::before {
     transform: translate(-50%, 0);
   }
 
-  .chat-controls .btn--icon[data-tooltip]:hover::after {
+  .chat-controls .btn--icon[data-tooltip]:hover::after,
+  .embed-chat-toggles .btn--icon[data-tooltip]:hover::after {
     transform: translate(-50%, 0);
   }
 }
 
 .chat-controls .btn--icon[data-tooltip]:focus-visible::before,
-.chat-controls .btn--icon[data-tooltip]:focus-visible::after {
+.chat-controls .btn--icon[data-tooltip]:focus-visible::after,
+.embed-chat-toggles .btn--icon[data-tooltip]:focus-visible::before,
+.embed-chat-toggles .btn--icon[data-tooltip]:focus-visible::after {
   opacity: 1;
 }
 
-.chat-controls .btn--icon[data-tooltip]:focus-visible::before {
+.chat-controls .btn--icon[data-tooltip]:focus-visible::before,
+.embed-chat-toggles .btn--icon[data-tooltip]:focus-visible::before {
   transform: translate(-50%, 0);
 }
 
-.chat-controls .btn--icon[data-tooltip]:focus-visible::after {
+.chat-controls .btn--icon[data-tooltip]:focus-visible::after,
+.embed-chat-toggles .btn--icon[data-tooltip]:focus-visible::after {
   transform: translate(-50%, 0);
 }
 

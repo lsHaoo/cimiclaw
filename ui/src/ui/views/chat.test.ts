@@ -403,6 +403,7 @@ function renderChatView(overrides: Partial<Parameters<typeof renderChat>[0]> = {
       onSend: () => undefined,
       onCompact: () => undefined,
       onToggleRealtimeTalk: () => undefined,
+      onToggleRealtimeTalkOptions: () => undefined,
       onDismissError: () => undefined,
       onAbort: () => undefined,
       onQueueRemove: () => undefined,
@@ -907,7 +908,7 @@ describe("chat embed shell", () => {
     expect(container.textContent).toContain("历史对话");
     expect(container.textContent).toContain("定时任务");
     expect(container.textContent).toContain("Skills");
-    expect(container.textContent).toContain("使用情况");
+    expect(container.textContent).toContain("计量");
 
     const sessionButton = container.querySelector<HTMLButtonElement>(".chat-embed-rail__item");
     sessionButton?.click();
@@ -918,6 +919,45 @@ describe("chat embed shell", () => {
     ).find((button) => button.textContent?.includes("Skills"));
     skillsButton?.click();
     expect(onNavigateToTab).toHaveBeenCalledWith("skills");
+  });
+
+  it("opens config from the composer settings button in embed mode", () => {
+    const onNavigateToTab = vi.fn();
+    const onToggleRealtimeTalkOptions = vi.fn();
+    const container = renderChatView({
+      embedMode: true,
+      onNavigateToTab,
+      onToggleRealtimeTalkOptions,
+    });
+
+    const settingsButton = Array.from(
+      container.querySelectorAll<HTMLButtonElement>(".agent-chat__input-btn"),
+    ).find((button) => button.getAttribute("aria-label") === "配置");
+
+    expect(settingsButton).toBeInstanceOf(HTMLButtonElement);
+    settingsButton?.click();
+
+    expect(onNavigateToTab).toHaveBeenCalledWith("config");
+    expect(onToggleRealtimeTalkOptions).not.toHaveBeenCalled();
+  });
+
+  it("keeps the composer settings button on talk options outside embed mode", () => {
+    const onNavigateToTab = vi.fn();
+    const onToggleRealtimeTalkOptions = vi.fn();
+    const container = renderChatView({
+      onNavigateToTab,
+      onToggleRealtimeTalkOptions,
+    });
+
+    const settingsButton = Array.from(
+      container.querySelectorAll<HTMLButtonElement>(".agent-chat__input-btn"),
+    ).find((button) => button.getAttribute("aria-label") === "Talk options");
+
+    expect(settingsButton).toBeInstanceOf(HTMLButtonElement);
+    settingsButton?.click();
+
+    expect(onToggleRealtimeTalkOptions).toHaveBeenCalledTimes(1);
+    expect(onNavigateToTab).not.toHaveBeenCalled();
   });
 
   it("toggles the embed rail collapsed state via the collapse button", () => {

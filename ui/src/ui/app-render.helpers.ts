@@ -582,6 +582,13 @@ export function renderEmbedChatToggles(state: AppViewState) {
   const disableThinkingToggle = state.onboarding;
   const showThinking = state.onboarding ? false : state.settings.chatShowThinking;
   const showToolCalls = state.onboarding ? true : state.settings.chatShowToolCalls;
+  const restartLabel = "重启服务";
+  const thinkingLabel = disableThinkingToggle
+    ? t("chat.onboardingDisabled")
+    : t("chat.thinkingToggle");
+  const toolCallsLabel = disableThinkingToggle
+    ? t("chat.onboardingDisabled")
+    : t("chat.toolCallsToggle");
   const restartServiceIcon = html`
     <svg
       class="embed-chat-restart-icon"
@@ -621,8 +628,9 @@ export function renderEmbedChatToggles(state: AppViewState) {
         @click=${() => {
           globalThis.window?.parent?.postMessage("cimiclaw:web:restart-service", "*");
         }}
-        aria-label="重启服务"
-        title="重启服务"
+        aria-label=${restartLabel}
+        title=${restartLabel}
+        data-tooltip=${restartLabel}
       >
         ${restartServiceIcon}
       </button>
@@ -638,7 +646,9 @@ export function renderEmbedChatToggles(state: AppViewState) {
           }
         }}
         aria-pressed=${showThinking}
-        title=${t("chat.thinkingToggle")}
+        aria-label=${thinkingLabel}
+        title=${thinkingLabel}
+        data-tooltip=${thinkingLabel}
       >
         ${icons.brain}
       </button>
@@ -654,7 +664,9 @@ export function renderEmbedChatToggles(state: AppViewState) {
           }
         }}
         aria-pressed=${showToolCalls}
-        title=${t("chat.toolCallsToggle")}
+        aria-label=${toolCallsLabel}
+        title=${toolCallsLabel}
+        data-tooltip=${toolCallsLabel}
       >
         ${toolCallsIcon}
       </button>
