@@ -661,6 +661,32 @@ export const FIELD_HELP: Record<string, string> = {
     "Capture tool output text on OTEL spans when content capture is enabled.",
   "diagnostics.otel.captureContent.systemPrompt":
     "Capture system prompt text on OTEL spans when content capture is enabled. This remains off unless explicitly enabled.",
+  "diagnostics.langfuse":
+    "Langfuse export settings for traces, generations, and spans with native session support. Use this for full Langfuse observability with input/output capture and session grouping.",
+  "diagnostics.langfuse.enabled":
+    "Master toggle for Langfuse export. Requires publicKey and secretKey to be set.",
+  "diagnostics.langfuse.publicKey":
+    "Langfuse public API key (pk-lf-...). Find this in your Langfuse project settings.",
+  "diagnostics.langfuse.secretKey":
+    "Langfuse secret API key (sk-lf-...). Keep this confidential.",
+  "diagnostics.langfuse.baseUrl":
+    "Langfuse API base URL. Defaults to https://cloud.langfuse.com. Set this for self-hosted Langfuse instances.",
+  "diagnostics.langfuse.flushIntervalMs":
+    "Interval in milliseconds for periodic telemetry flush from Langfuse SDK to the server.",
+  "diagnostics.langfuse.release":
+    "Release tag to associate with traces in Langfuse. Useful for tracking deployments.",
+  "diagnostics.langfuse.userId":
+    "User ID to associate with traces in Langfuse. Enables user-level analytics in the Sessions and Users dashboards.",
+  "diagnostics.langfuse.captureContent":
+    "Opt-in content capture for Langfuse traces. Boolean true captures input/output messages; the object form lets you enable specific content classes.",
+  "diagnostics.langfuse.captureContent.enabled":
+    "Master switch for granular Langfuse content capture. When true, captures input and output messages by default.",
+  "diagnostics.langfuse.captureContent.inputMessages":
+    "Capture model input messages on Langfuse traces when content capture is enabled.",
+  "diagnostics.langfuse.captureContent.outputMessages":
+    "Capture model output messages on Langfuse traces when content capture is enabled.",
+  "diagnostics.langfuse.captureContent.systemPrompt":
+    "Capture system prompt text on Langfuse traces when content capture is enabled. This remains off unless explicitly enabled.",
   "diagnostics.cacheTrace.enabled":
     "Log cache trace snapshots for embedded agent runs (default: false).",
   "diagnostics.cacheTrace.filePath":

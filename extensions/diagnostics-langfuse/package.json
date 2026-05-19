@@ -1,0 +1,37 @@
+{
+  "name": "@openclaw/diagnostics-langfuse",
+  "version": "2026.5.10-beta.1",
+  "description": "OpenClaw diagnostics Langfuse exporter",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/openclaw/openclaw"
+  },
+  "type": "module",
+  "dependencies": {
+    "langfuse": "^3.37.0"
+  },
+  "devDependencies": {
+    "@openclaw/plugin-sdk": "workspace:*"
+  },
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ],
+    "install": {
+      "clawhubSpec": "clawhub:@openclaw/diagnostics-langfuse",
+      "npmSpec": "@openclaw/diagnostics-langfuse",
+      "defaultChoice": "npm",
+      "minHostVersion": ">=2026.4.25"
+    },
+    "compat": {
+      "pluginApi": ">=2026.5.10-beta.1"
+    },
+    "build": {
+      "openclawVersion": "2026.5.10-beta.1"
+    },
+    "release": {
+      "publishToClawHub": true,
+      "publishToNpm": true
+    }
+  }
+}

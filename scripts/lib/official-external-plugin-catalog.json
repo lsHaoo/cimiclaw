@@ -68,6 +68,24 @@
       }
     },
     {
+      "name": "@openclaw/diagnostics-langfuse",
+      "description": "OpenClaw diagnostics Langfuse exporter",
+      "source": "official",
+      "kind": "plugin",
+      "openclaw": {
+        "plugin": {
+          "id": "diagnostics-langfuse",
+          "label": "Diagnostics Langfuse"
+        },
+        "install": {
+          "clawhubSpec": "clawhub:@openclaw/diagnostics-langfuse",
+          "npmSpec": "@openclaw/diagnostics-langfuse",
+          "defaultChoice": "npm",
+          "minHostVersion": ">=2026.4.25"
+        }
+      }
+    },
+    {
       "name": "@openclaw/diagnostics-prometheus",
       "description": "OpenClaw diagnostics Prometheus exporter",
       "source": "official",
