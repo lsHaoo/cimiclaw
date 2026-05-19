@@ -1,6 +1,11 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { buildControlUiCspHeader, computeInlineScriptHashes } from "./control-ui-csp.js";
+import {
+  buildControlUiCspHeader,
+  computeInlineScriptHashes,
+  normalizeControlUiFrameAncestors,
+  resolveControlUiFrameOptionsHeader,
+} from "./control-ui-csp.js";
 
 describe("buildControlUiCspHeader", () => {
   it("blocks inline scripts while allowing inline styles", () => {
@@ -56,6 +61,39 @@ describe("buildControlUiCspHeader", () => {
   it("falls back to plain script-src self when hashes array is empty", () => {
     const csp = buildControlUiCspHeader({ inlineScriptHashes: [] });
     expect(csp).toMatch(/script-src 'self'(?:;|$)/);
+  });
+
+  it("allows explicit frame ancestor origins", () => {
+    const csp = buildControlUiCspHeader({
+      frameAncestors: ["self", "https://app.example.com", " https://app.example.com/ "],
+    });
+    expect(csp).toContain("frame-ancestors 'self' https://app.example.com");
+  });
+});
+
+describe("normalizeControlUiFrameAncestors", () => {
+  it("normalizes self and explicit origins", () => {
+    expect(
+      normalizeControlUiFrameAncestors([
+        "self",
+        "https://app.example.com",
+        "https://app.example.com/",
+      ]),
+    ).toEqual(["'self'", "https://app.example.com"]);
+  });
+});
+
+describe("resolveControlUiFrameOptionsHeader", () => {
+  it("keeps DENY by default", () => {
+    expect(resolveControlUiFrameOptionsHeader()).toBe("DENY");
+  });
+
+  it("uses SAMEORIGIN for self-only framing", () => {
+    expect(resolveControlUiFrameOptionsHeader(["self"])).toBe("SAMEORIGIN");
+  });
+
+  it("omits X-Frame-Options for explicit cross-origin framing", () => {
+    expect(resolveControlUiFrameOptionsHeader(["https://app.example.com"])).toBeNull();
   });
 });
 

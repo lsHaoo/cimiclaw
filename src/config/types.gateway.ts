@@ -111,6 +111,12 @@ export type GatewayControlUiConfig = {
   /** Optional filesystem root for Control UI assets (defaults to dist/control-ui). */
   root?: string;
   /**
+   * Parent page origins allowed to embed the Control UI in an iframe.
+   * Use full http(s) origins such as "https://app.example.com", or "self"
+   * for same-origin embedding only. Default: deny all framing.
+   */
+  allowedFrameAncestors?: string[];
+  /**
    * Embed sandbox mode for hosted Control UI previews.
    * - strict: no script execution inside embeds
    * - scripts: allow scripts while keeping embeds origin-isolated (default)

@@ -315,6 +315,7 @@ export const FIELD_LABELS: Record<string, string> = {
   "tools.web.fetch.ssrfPolicy.allowIpv6UniqueLocalRange": "Web Fetch Allow IPv6 Unique Local Range",
   "gateway.controlUi.basePath": "Control UI Base Path",
   "gateway.controlUi.root": "Control UI Assets Root",
+  "gateway.controlUi.allowedFrameAncestors": "Allowed Control UI Frame Ancestors",
   "gateway.controlUi.embedSandbox": "Control UI Embed Sandbox Mode",
   "gateway.controlUi.allowExternalEmbedUrls": "Allow External Control UI Embed URLs",
   "gateway.controlUi.chatMessageMaxWidth": "Control UI Chat Message Max Width",

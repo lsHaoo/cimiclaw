@@ -32,11 +32,61 @@ function hasScriptSrcAttribute(openTag: string): boolean {
   );
 }
 
+function normalizeControlUiFrameAncestor(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+  if (trimmed === "self" || trimmed === "'self'") {
+    return "'self'";
+  }
+  try {
+    const url = new URL(trimmed);
+    if (
+      (url.protocol !== "http:" && url.protocol !== "https:") ||
+      url.username ||
+      url.password ||
+      url.search ||
+      url.hash ||
+      (url.pathname !== "/" && url.pathname !== "")
+    ) {
+      return null;
+    }
+    return url.origin;
+  } catch {
+    return null;
+  }
+}
+
+export function normalizeControlUiFrameAncestors(values?: readonly string[]): string[] {
+  if (!values?.length) {
+    return [];
+  }
+  const normalized = values
+    .map((value) => normalizeControlUiFrameAncestor(value))
+    .filter((value): value is string => value !== null);
+  return [...new Set(normalized)];
+}
+
+export function resolveControlUiFrameOptionsHeader(
+  frameAncestors?: readonly string[],
+): "DENY" | "SAMEORIGIN" | null {
+  const normalized = normalizeControlUiFrameAncestors(frameAncestors);
+  if (normalized.length === 0) {
+    return "DENY";
+  }
+  if (normalized.length === 1 && normalized[0] === "'self'") {
+    return "SAMEORIGIN";
+  }
+  return null;
+}
+
 export function buildControlUiCspHeader(opts?: {
   inlineScriptHashes?: string[];
-  allowFrameAncestors?: boolean;
+  frameAncestors?: readonly string[];
 }): string {
   const hashes = opts?.inlineScriptHashes;
+  const frameAncestors = normalizeControlUiFrameAncestors(opts?.frameAncestors);
   const scriptSrc = hashes?.length
     ? `script-src 'self' ${hashes.map((h) => `'${h}'`).join(" ")}`
     : "script-src 'self'";
@@ -44,7 +94,9 @@ export function buildControlUiCspHeader(opts?: {
     "default-src 'self'",
     "base-uri 'none'",
     "object-src 'none'",
-    opts?.allowFrameAncestors ? "frame-ancestors * http: https: file:" : "frame-ancestors 'none'",
+    frameAncestors.length > 0
+      ? `frame-ancestors ${frameAncestors.join(" ")}`
+      : "frame-ancestors 'none'",
     scriptSrc,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: blob:",

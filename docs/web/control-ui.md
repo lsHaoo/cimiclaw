@@ -257,6 +257,45 @@ Use `trusted` only when the embedded document genuinely needs same-origin behavi
 
 Absolute external `http(s)` embed URLs stay blocked by default. If you intentionally want `[embed url="https://..."]` to load third-party pages, set `gateway.controlUi.allowExternalEmbedUrls: true`.
 
+## Embedding the Control UI itself in an iframe
+
+By default, the Control UI refuses all framing:
+
+- `X-Frame-Options: DENY`
+- `Content-Security-Policy: frame-ancestors 'none'`
+
+That means `gateway.controlUi.embedSandbox` does **not** make the Control UI itself iframe-embeddable. It only controls embeds rendered _inside_ Control UI chat content.
+
+If you intentionally want to embed the Control UI inside another app, set `gateway.controlUi.allowedFrameAncestors` to an explicit parent-origin allowlist:
+
+```json5
+{
+  gateway: {
+    controlUi: {
+      allowedFrameAncestors: ["https://app.example.com", "http://localhost:3000"],
+    },
+  },
+}
+```
+
+Use `"self"` for same-origin-only framing:
+
+```json5
+{
+  gateway: {
+    controlUi: {
+      allowedFrameAncestors: ["self"],
+    },
+  },
+}
+```
+
+Notes:
+
+- Entries must be full `http(s)` origins, not paths.
+- Cross-origin iframe embedding omits `X-Frame-Options` and relies on CSP `frame-ancestors`.
+- Leave this unset unless you explicitly need iframe embedding.
+
 ## Chat message width
 
 Grouped chat messages use a readable default max-width. Wide-monitor deployments can override it without patching bundled CSS by setting `gateway.controlUi.chatMessageMaxWidth`:

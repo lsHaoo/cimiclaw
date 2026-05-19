@@ -840,6 +840,31 @@ export const OpenClawSchema = z
             enabled: z.boolean().optional(),
             basePath: z.string().optional(),
             root: z.string().optional(),
+            allowedFrameAncestors: z
+              .array(
+                z
+                  .string()
+                  .transform((value) => value.trim())
+                  .refine((value) => {
+                    if (value === "self") {
+                      return true;
+                    }
+                    try {
+                      const url = new URL(value);
+                      return (
+                        (url.protocol === "http:" || url.protocol === "https:") &&
+                        !url.username &&
+                        !url.password &&
+                        !url.search &&
+                        !url.hash &&
+                        (url.pathname === "/" || url.pathname === "")
+                      );
+                    } catch {
+                      return false;
+                    }
+                  }, "Expected \"self\" or a full http(s) origin such as https://app.example.com"),
+              )
+              .optional(),
             embedSandbox: z
               .union([z.literal("strict"), z.literal("scripts"), z.literal("trusted")])
               .optional(),

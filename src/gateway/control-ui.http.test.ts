@@ -320,6 +320,60 @@ describe("handleControlUiHttpRequest", () => {
     });
   });
 
+  it("allows same-origin iframe embedding when explicitly configured", async () => {
+    await withControlUiRoot({
+      fn: async (tmp) => {
+        const { res, setHeader } = makeMockHttpResponse();
+        const handled = await handleControlUiHttpRequest(
+          { url: "/", method: "GET" } as IncomingMessage,
+          res,
+          {
+            root: { kind: "resolved", path: tmp },
+            config: {
+              gateway: {
+                controlUi: {
+                  allowedFrameAncestors: ["self"],
+                },
+              },
+            },
+          },
+        );
+        expect(handled).toBe(true);
+        expect(setHeader).toHaveBeenCalledWith("X-Frame-Options", "SAMEORIGIN");
+        const csp = setHeader.mock.calls.find((call) => call[0] === "Content-Security-Policy")?.[1];
+        expect(String(csp)).toContain("frame-ancestors 'self'");
+      },
+    });
+  });
+
+  it("allows explicit cross-origin iframe embedding and omits X-Frame-Options", async () => {
+    await withControlUiRoot({
+      fn: async (tmp) => {
+        const { res, setHeader } = makeMockHttpResponse();
+        const handled = await handleControlUiHttpRequest(
+          { url: "/", method: "GET" } as IncomingMessage,
+          res,
+          {
+            root: { kind: "resolved", path: tmp },
+            config: {
+              gateway: {
+                controlUi: {
+                  allowedFrameAncestors: ["https://app.example.com", "http://localhost:3000"],
+                },
+              },
+            },
+          },
+        );
+        expect(handled).toBe(true);
+        expect(setHeader.mock.calls.some((call) => call[0] === "X-Frame-Options")).toBe(false);
+        const csp = setHeader.mock.calls.find((call) => call[0] === "Content-Security-Policy")?.[1];
+        expect(String(csp)).toContain(
+          "frame-ancestors https://app.example.com http://localhost:3000",
+        );
+      },
+    });
+  });
+
   it("serves assistant local media through the control ui media route", async () => {
     await withAllowedAssistantMediaRoot({
       prefix: "ui-media-",

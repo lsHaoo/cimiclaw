@@ -366,6 +366,39 @@ describe("gateway.controlUi.embedSandbox", () => {
   });
 });
 
+describe("gateway.controlUi.allowedFrameAncestors", () => {
+  it("accepts self and full http(s) origins", () => {
+    const result = OpenClawSchema.safeParse({
+      gateway: {
+        controlUi: {
+          allowedFrameAncestors: ["self", "https://app.example.com", "http://localhost:3000"],
+        },
+      },
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.gateway?.controlUi?.allowedFrameAncestors).toEqual([
+        "self",
+        "https://app.example.com",
+        "http://localhost:3000",
+      ]);
+    }
+  });
+
+  it("rejects pathful and non-http(s) values", () => {
+    for (const value of ["https://app.example.com/embed", "file:///tmp/app.html", "*"]) {
+      const result = OpenClawSchema.safeParse({
+        gateway: {
+          controlUi: {
+            allowedFrameAncestors: [value],
+          },
+        },
+      });
+      expect(result.success).toBe(false);
+    }
+  });
+});
+
 describe("gateway.controlUi.allowExternalEmbedUrls", () => {
   it("accepts boolean values", () => {
     for (const value of [true, false]) {
