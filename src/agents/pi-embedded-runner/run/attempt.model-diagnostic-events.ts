@@ -25,6 +25,12 @@ import type {
 
 export { diagnosticErrorCategory };
 
+type ContentCapturePolicy = {
+  inputMessages: boolean;
+  outputMessages: boolean;
+  systemPrompt: boolean;
+};
+
 type ModelCallDiagnosticContext = {
   runId: string;
   sessionKey?: string;
@@ -36,6 +42,16 @@ type ModelCallDiagnosticContext = {
   trace: DiagnosticTraceContext;
   nextCallId: () => string;
   onStarted?: () => void;
+  /**
+   * Opt-in content capture for diagnostic events.
+   * When provided, input/output messages and system prompt are attached
+   * to model.call.started / model.call.completed events.
+   */
+  captureContent?: ContentCapturePolicy;
+  /**
+   * Provider for the system prompt text (called lazily when capture is enabled).
+   */
+  systemPromptProvider?: () => string | undefined;
 };
 
 type ModelCallEventBase = Omit<
@@ -65,6 +81,10 @@ type ModelCallObservationState = {
   requestPayloadBytes?: number;
   responseStreamBytes: number;
   timeToFirstByteMs?: number;
+  /** Captured input messages from streamContext */
+  inputMessages?: unknown;
+  /** Captured output messages from response stream */
+  outputMessages?: unknown[];
 };
 
 const MODEL_CALL_STREAM_RETURN_TIMEOUT_MS = 1000;
@@ -90,11 +110,24 @@ function observeResponseChunk(
   state: ModelCallObservationState,
   startedAt: number,
   chunk: unknown,
+  captureOutput?: boolean,
 ): void {
   state.timeToFirstByteMs ??= Math.max(0, Date.now() - startedAt);
   const bytes = utf8JsonByteLength(chunk);
   if (bytes !== undefined) {
     state.responseStreamBytes += bytes;
+  }
+  if (captureOutput) {
+    const record = chunk as Record<string, unknown> | null;
+    if (record && typeof record === "object") {
+      // Terminal events: keep the final message/error as the single output
+      if (record.message && typeof record.message === "object") {
+        state.outputMessages = [record.message];
+      } else if (record.error && typeof record.error === "object") {
+        state.outputMessages = [record.error];
+      }
+      // Delta events (partial) are incremental snapshots — skip to avoid duplicates
+    }
   }
 }
 
@@ -235,10 +268,16 @@ function dispatchModelCallEndedHook(
   );
 }
 
-function emitModelCallStarted(eventBase: ModelCallEventBase): void {
+function emitModelCallStarted(
+  eventBase: ModelCallEventBase,
+  state: ModelCallObservationState,
+  systemPrompt?: string,
+): void {
   emitTrustedDiagnosticEvent({
     type: "model.call.started",
     ...eventBase,
+    ...(state.inputMessages !== undefined ? { inputMessages: state.inputMessages } : {}),
+    ...(systemPrompt !== undefined ? { systemPrompt } : {}),
   });
   dispatchModelCallStartedHook(eventBase);
 }
@@ -255,6 +294,9 @@ function emitModelCallCompleted(
     ...eventBase,
     durationMs,
     ...sizeTimingFields,
+    ...(state.outputMessages && state.outputMessages.length > 0
+      ? { outputMessages: state.outputMessages }
+      : {}),
   });
   dispatchModelCallEndedHook(eventBase, {
     durationMs,
@@ -368,6 +410,7 @@ async function* observeModelCallIterator<T>(
   eventBase: ModelCallEventBase,
   startedAt: number,
   state: ModelCallObservationState,
+  captureOutput?: boolean,
 ): AsyncIterable<T> {
   let terminalEmitted = false;
   try {
@@ -376,7 +419,7 @@ async function* observeModelCallIterator<T>(
       if (next.done) {
         break;
       }
-      observeResponseChunk(state, startedAt, next.value);
+      observeResponseChunk(state, startedAt, next.value, captureOutput);
       yield next.value;
     }
     terminalEmitted = true;
@@ -399,9 +442,10 @@ function observeModelCallStream<T extends AsyncIterable<unknown>>(
   eventBase: ModelCallEventBase,
   startedAt: number,
   state: ModelCallObservationState,
+  captureOutput?: boolean,
 ): T {
   const observedIterator = () =>
-    observeModelCallIterator(createIterator(), eventBase, startedAt, state)[Symbol.asyncIterator]();
+    observeModelCallIterator(createIterator(), eventBase, startedAt, state, captureOutput)[Symbol.asyncIterator]();
   let hasNonConfigurableIterator = false;
   try {
     hasNonConfigurableIterator =
@@ -430,6 +474,7 @@ function observeModelCallResult(
   eventBase: ModelCallEventBase,
   startedAt: number,
   state: ModelCallObservationState,
+  captureOutput?: boolean,
 ): unknown {
   const createIterator = asyncIteratorFactory(result);
   if (createIterator) {
@@ -439,6 +484,7 @@ function observeModelCallResult(
       eventBase,
       startedAt,
       state,
+      captureOutput,
     );
   }
   emitModelCallCompleted(eventBase, startedAt, state);
@@ -449,28 +495,42 @@ export function wrapStreamFnWithDiagnosticModelCallEvents(
   streamFn: StreamFn,
   ctx: ModelCallDiagnosticContext,
 ): StreamFn {
+  const shouldCapture = ctx.captureContent;
   return ((model, streamContext, options) => {
     const callId = ctx.nextCallId();
     const trace = freezeDiagnosticTraceContext(createChildDiagnosticTraceContext(ctx.trace));
     const eventBase = baseModelCallEvent(ctx, callId, trace);
-    emitModelCallStarted(eventBase);
-    ctx.onStarted?.();
     const startedAt = Date.now();
     const state: ModelCallObservationState = { responseStreamBytes: 0 };
+
+    // Capture input messages from stream context when enabled
+    if (shouldCapture?.inputMessages && streamContext && typeof streamContext === "object") {
+      const contextRecord = streamContext as unknown as Record<string, unknown>;
+      if (Array.isArray(contextRecord.messages)) {
+        state.inputMessages = contextRecord.messages;
+      }
+    }
+
+    // Capture system prompt when enabled
+    const systemPrompt = shouldCapture?.systemPrompt ? ctx.systemPromptProvider?.() : undefined;
+
+    emitModelCallStarted(eventBase, state, systemPrompt);
+    ctx.onStarted?.();
     const propagatedOptions = withDiagnosticTraceparentHeader(options, trace, state);
+    const captureOutput = shouldCapture?.outputMessages ?? false;
 
     try {
       const result = streamFn(model, streamContext, propagatedOptions);
       if (isPromiseLike(result)) {
         return result.then(
-          (resolved) => observeModelCallResult(resolved, eventBase, startedAt, state),
+          (resolved) => observeModelCallResult(resolved, eventBase, startedAt, state, captureOutput),
           (err) => {
             emitModelCallError(eventBase, startedAt, state, modelCallErrorFields(err));
             throw err;
           },
         );
       }
-      return observeModelCallResult(result, eventBase, startedAt, state);
+      return observeModelCallResult(result, eventBase, startedAt, state, captureOutput);
     } catch (err) {
       emitModelCallError(eventBase, startedAt, state, modelCallErrorFields(err));
       throw err;

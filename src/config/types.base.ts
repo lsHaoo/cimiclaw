@@ -303,6 +303,33 @@ export type DiagnosticsCacheTraceConfig = {
   includeSystem?: boolean;
 };
 
+export type DiagnosticsLangfuseConfig = {
+  enabled?: boolean;
+  publicKey?: string;
+  secretKey?: string;
+  baseUrl?: string;
+  flushIntervalMs?: number;
+  release?: string;
+  /**
+   * Optional user ID to associate with traces in Langfuse.
+   * This populates the userId field on traces, enabling user-level analytics.
+   */
+  userId?: string;
+  /**
+   * Opt-in raw content capture for Langfuse traces.
+   * Boolean `true` captures input/output messages; the object form
+   * can enable each content class explicitly.
+   */
+  captureContent?:
+    | boolean
+    | {
+        enabled?: boolean;
+        inputMessages?: boolean;
+        outputMessages?: boolean;
+        systemPrompt?: boolean;
+      };
+};
+
 export type DiagnosticsConfig = {
   enabled?: boolean;
   /** Optional ad-hoc diagnostics flags (e.g. "telegram.http"). */
@@ -312,6 +339,7 @@ export type DiagnosticsConfig = {
   /** Threshold in ms before eligible stalled active work may be aborted for recovery. */
   stuckSessionAbortMs?: number;
   otel?: DiagnosticsOtelConfig;
+  langfuse?: DiagnosticsLangfuseConfig;
   cacheTrace?: DiagnosticsCacheTraceConfig;
 };
 
