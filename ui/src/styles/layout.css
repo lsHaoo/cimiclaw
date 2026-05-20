@@ -86,7 +86,7 @@
 }
 
 .shell--embed .content {
-  padding: 0;
+  padding: 0 20px;
 }
 
 .shell--embed .content > * + * {
@@ -987,7 +987,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px 8px 8px;
+  padding: 14px 0;
 }
 
 .embed-utility-bar__brand,
