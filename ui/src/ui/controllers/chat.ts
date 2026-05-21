@@ -280,6 +280,51 @@ export type ChatEventPayload = {
   errorMessage?: string;
 };
 
+const FINAL_RUN_ID_MARKER = "__openclawControlUiFinalRunId";
+
+function readFinalRunIdMarker(message: unknown): string | null {
+  if (!message || typeof message !== "object") {
+    return null;
+  }
+  const runId = (message as Record<string, unknown>)[FINAL_RUN_ID_MARKER];
+  return typeof runId === "string" && runId.trim() ? runId : null;
+}
+
+function markFinalMessageForRun(message: Record<string, unknown>, runId: string): Record<string, unknown> {
+  const marked = { ...message };
+  Object.defineProperty(marked, FINAL_RUN_ID_MARKER, {
+    configurable: true,
+    enumerable: false,
+    value: runId,
+  });
+  return marked;
+}
+
+function appendOrReplaceFinalMessage(
+  state: ChatState,
+  payload: ChatEventPayload,
+  message: Record<string, unknown>,
+) {
+  const runId = typeof payload.runId === "string" && payload.runId.trim() ? payload.runId : null;
+  if (!runId) {
+    state.chatMessages = [...state.chatMessages, message];
+    return;
+  }
+
+  const markedMessage = markFinalMessageForRun(message, runId);
+  const existingIndex = state.chatMessages.findIndex(
+    (candidate) => readFinalRunIdMarker(candidate) === runId,
+  );
+  if (existingIndex < 0) {
+    state.chatMessages = [...state.chatMessages, markedMessage];
+    return;
+  }
+
+  state.chatMessages = state.chatMessages.map((candidate, index) =>
+    index === existingIndex ? markedMessage : candidate,
+  );
+}
+
 function maybeResetToolStream(state: ChatState) {
   const toolHost = state as ChatState & Partial<Parameters<typeof resetToolStream>[0]>;
   if (
@@ -648,7 +693,7 @@ export function handleChatEvent(state: ChatState, payload?: ChatEventPayload) {
     if (payload.state === "final") {
       const finalMessage = normalizeFinalAssistantMessage(payload.message);
       if (finalMessage && !shouldHideAssistantChatMessage(finalMessage)) {
-        state.chatMessages = [...state.chatMessages, finalMessage];
+        appendOrReplaceFinalMessage(state, payload, finalMessage);
         return null;
       }
       return "final";
@@ -668,20 +713,17 @@ export function handleChatEvent(state: ChatState, payload?: ChatEventPayload) {
   } else if (payload.state === "final") {
     const finalMessage = normalizeFinalAssistantMessage(payload.message);
     if (finalMessage && !shouldHideAssistantChatMessage(finalMessage)) {
-      state.chatMessages = [...state.chatMessages, finalMessage];
+      appendOrReplaceFinalMessage(state, payload, finalMessage);
     } else if (
       state.chatStream?.trim() &&
       !isSilentReplyStream(state.chatStream) &&
       !isHeartbeatAckStream(state.chatStream)
     ) {
-      state.chatMessages = [
-        ...state.chatMessages,
-        {
-          role: "assistant",
-          content: [{ type: "text", text: state.chatStream }],
-          timestamp: Date.now(),
-        },
-      ];
+      appendOrReplaceFinalMessage(state, payload, {
+        role: "assistant",
+        content: [{ type: "text", text: state.chatStream }],
+        timestamp: Date.now(),
+      });
     }
     state.chatStream = null;
     state.chatRunId = null;

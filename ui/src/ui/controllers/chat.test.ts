@@ -471,6 +471,71 @@ describe("handleChatEvent", () => {
     expect(state.chatStreamStartedAt).toBe(null);
   });
 
+  it("replaces repeated final payloads for the same run instead of adding bubbles", () => {
+    const state = createState({
+      sessionKey: "main",
+      chatRunId: "run-1",
+      chatStream: "Partial reply",
+      chatStreamStartedAt: 100,
+    });
+    const first: ChatEventPayload = {
+      runId: "run-1",
+      sessionKey: "main",
+      state: "final",
+      message: {
+        role: "assistant",
+        content: [{ type: "text", text: "Partial reply" }],
+        timestamp: 101,
+      },
+    };
+    const second: ChatEventPayload = {
+      runId: "run-1",
+      sessionKey: "main",
+      state: "final",
+      message: {
+        role: "assistant",
+        content: [{ type: "text", text: "Complete reply" }],
+        timestamp: 102,
+      },
+    };
+
+    expect(handleChatEvent(state, first)).toBe("final");
+    expect(handleChatEvent(state, second)).toBe("final");
+
+    expect(state.chatMessages).toHaveLength(1);
+    expectTextChatMessage(state.chatMessages[0], "assistant", "Complete reply");
+  });
+
+  it("replaces fallback streamed final text when a later final payload arrives for the same run", () => {
+    const state = createState({
+      sessionKey: "main",
+      chatRunId: "run-1",
+      chatStream: "Partial streamed reply",
+      chatStreamStartedAt: 100,
+    });
+    const fallback: ChatEventPayload = {
+      runId: "run-1",
+      sessionKey: "main",
+      state: "final",
+    };
+    const complete: ChatEventPayload = {
+      runId: "run-1",
+      sessionKey: "main",
+      state: "final",
+      message: {
+        role: "assistant",
+        content: [{ type: "text", text: "Complete persisted reply" }],
+        timestamp: 102,
+      },
+    };
+
+    expect(handleChatEvent(state, fallback)).toBe("final");
+    expect(handleChatEvent(state, complete)).toBe("final");
+
+    expect(state.chatMessages).toHaveLength(1);
+    expectTextChatMessage(state.chatMessages[0], "assistant", "Complete persisted reply");
+  });
+
   it("processes aborted from own run and keeps partial assistant message", () => {
     const existingMessage = {
       role: "user",
