@@ -891,7 +891,7 @@ describe("chat embed shell", () => {
   it("renders the left rail and top-right links in embed mode", () => {
     const onNavigateToTab = vi.fn();
     const onSessionSelect = vi.fn();
-    const container = renderChatView({
+    const embedProps: Partial<Parameters<typeof renderChat>[0]> = {
       embedMode: true,
       sessions: {
         ts: 0,
@@ -902,9 +902,11 @@ describe("chat embed shell", () => {
       },
       onNavigateToTab,
       onSessionSelect,
-    });
+    };
+    let container = renderChatView(embedProps);
 
-    expect(container.querySelector(".chat-embed-rail__new")?.textContent).toContain("新对话");
+    expect(container.querySelector(".chat-embed-rail__new")?.textContent).toContain("新建会话");
+    expect(container.querySelector(".chat-embed-rail__new")?.textContent).not.toContain("＋");
     expect(container.textContent).toContain("历史对话");
     expect(container.textContent).toContain("定时任务");
     expect(container.textContent).toContain("Skills");
@@ -913,6 +915,18 @@ describe("chat embed shell", () => {
     const sessionButton = container.querySelector<HTMLButtonElement>(".chat-embed-rail__item");
     sessionButton?.click();
     expect(onSessionSelect).toHaveBeenCalledWith("agent:main:plan");
+
+    container.querySelector<HTMLButtonElement>('[aria-label="查看历史对话"]')?.click();
+    expect(onNavigateToTab).toHaveBeenCalledWith("sessions");
+
+    const cronTab = Array.from(
+      container.querySelectorAll<HTMLButtonElement>(".chat-embed-rail__tab"),
+    ).find((button) => button.textContent?.includes("定时任务"));
+    cronTab?.click();
+    container = renderChatView(embedProps);
+
+    container.querySelector<HTMLButtonElement>('[aria-label="查看定时任务"]')?.click();
+    expect(onNavigateToTab).toHaveBeenCalledWith("cron");
 
     const skillsButton = Array.from(
       container.querySelectorAll<HTMLButtonElement>(".chat-embed-links__item"),
@@ -1005,7 +1019,7 @@ describe("chat embed shell", () => {
         .querySelector(".chat-embed-shell")
         ?.classList.contains("chat-embed-shell--rail-collapsed"),
     ).toBe(false);
-    expect(container.querySelector(".chat-embed-rail__new")?.textContent).toContain("新对话");
+    expect(container.querySelector(".chat-embed-rail__new")?.textContent).toContain("新建会话");
   });
 });
 

@@ -1,7 +1,7 @@
 import { html } from "lit";
 import {
   agentLogoUrl,
-  assistantAvatarFallbackUrl,
+  chatAvatarFallbackUrl,
   chatClawLogoUrl,
   resolveChatAvatarRenderUrl,
   resolveAssistantTextAvatar,
@@ -58,7 +58,7 @@ export function renderWelcomeState(props: ChatWelcomeProps) {
   const name = props.assistantName || "Assistant";
   const avatar = resolveAssistantAvatarUrl(props);
   const avatarText = avatar ? null : resolveAssistantTextAvatar(props.assistantAvatar);
-  const fallbackAvatarUrl = assistantAvatarFallbackUrl(props.basePath ?? "");
+  const fallbackAvatarUrl = chatAvatarFallbackUrl(props.basePath ?? "");
   const logoUrl = agentLogoUrl(props.basePath ?? "");
 
   return html`

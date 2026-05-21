@@ -125,7 +125,7 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  min-height: 56px;
+  min-height: 48px;
   border: 1px solid rgba(44, 118, 223, 0.12);
   border-radius: 18px;
   background: rgba(76, 151, 255, 0.14);
@@ -133,6 +133,26 @@
   font-size: 15px;
   font-weight: 650;
   cursor: pointer;
+}
+
+.chat-embed-rail__new-icon,
+.chat-embed-rail__new-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.chat-embed-rail__new-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-embed-rail__new-icon svg {
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .chat-embed-rail__tabs {
@@ -155,15 +175,67 @@
   color: #2c76df;
 }
 
+.chat-embed-rail__search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: calc(100% - 8px);
+}
+
 .chat-embed-rail__search input {
-  width: 100%;
-  min-height: 42px;
-  padding: 0 14px;
+  min-width: 0;
+  min-height: 36px;
+  flex: 1 1 auto;
+  padding: 0 12px;
   border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
-  border-radius: 14px;
+  border-radius: 12px;
   background: white;
   color: var(--text);
   font: inherit;
+}
+
+.chat-embed-rail__search-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-radius: 12px;
+  background: white;
+  color: #2c76df;
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.chat-embed-rail__search-action:hover:not(:disabled) {
+  background: rgba(76, 151, 255, 0.1);
+  border-color: rgba(44, 118, 223, 0.28);
+  transform: translateY(-1px);
+}
+
+.chat-embed-rail__search-action:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.chat-embed-rail__search-action:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.chat-embed-rail__search-action svg {
+  width: 17px;
+  height: 17px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .chat-embed-rail__list {

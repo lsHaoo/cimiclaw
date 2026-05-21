@@ -6,7 +6,7 @@ import {
   resolveLocalUserName,
 } from "../user-identity.ts";
 import {
-  assistantAvatarFallbackUrl,
+  chatAvatarFallbackUrl,
   isRenderableControlUiAvatarUrl,
   resolveAssistantTextAvatar,
 } from "../views/agents-utils.ts";
@@ -23,7 +23,7 @@ export function renderChatAvatar(
   const assistantName = assistant?.name?.trim() || "Assistant";
   const assistantAvatar = assistant?.avatar?.trim() || "";
   const assistantAvatarText = resolveAssistantTextAvatar(assistantAvatar);
-  const assistantFallbackAvatar = assistantAvatarFallbackUrl(basePath ?? "");
+  const assistantFallbackAvatar = chatAvatarFallbackUrl(basePath ?? "");
   const userName = resolveLocalUserName(user);
   const userAvatarUrl = resolveLocalUserAvatarUrl(user);
   const userAvatarText = resolveLocalUserAvatarText(user);

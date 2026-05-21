@@ -258,6 +258,11 @@ export function assistantAvatarFallbackUrl(basePath: string): string {
   return base ? `${base}/cimiclaw-logo.png` : "cimiclaw-logo.png";
 }
 
+export function chatAvatarFallbackUrl(basePath: string): string {
+  const base = normalizeOptionalString(basePath)?.replace(/\/$/, "") ?? "";
+  return base ? `${base}/cimiclaw-chat.png` : "cimiclaw-chat.png";
+}
+
 function isAvatarUrl(value: string): boolean {
   const trimmed = value.trim();
   return trimmed.startsWith("blob:") || isRenderableControlUiAvatarUrl(trimmed);

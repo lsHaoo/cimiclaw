@@ -529,15 +529,17 @@ describe("applySettingsFromUrl", () => {
   });
 
   it("preserves embed mode when syncing tab URLs", () => {
-    setTestWindowUrl("https://control.example/ui/chat?embed=1&session=main");
-    const host = createHost("chat");
-    host.basePath = "/ui";
-    host.embedMode = true;
-    host.sessionKey = "main";
+    for (const tab of ["skills", "sessions", "cron"] as const) {
+      setTestWindowUrl("https://control.example/ui/chat?embed=1&session=main");
+      const host = createHost("chat");
+      host.basePath = "/ui";
+      host.embedMode = true;
+      host.sessionKey = "main";
 
-    syncUrlWithTab(host, "skills", false);
+      syncUrlWithTab(host, tab, false);
 
-    expect(window.location.pathname).toBe("/ui/skills");
-    expect(window.location.search).toBe("?embed=1");
+      expect(window.location.pathname).toBe(`/ui/${tab}`);
+      expect(window.location.search).toBe("?embed=1");
+    }
   });
 });

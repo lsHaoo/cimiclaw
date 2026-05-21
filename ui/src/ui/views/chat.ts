@@ -390,6 +390,9 @@ function renderEmbedLeftRail(props: ChatProps, requestUpdate: () => void) {
     )
     .filter((job) => matchesRailQuery(query, job.id, job.name, job.description));
   const showHistory = vs.embedRailSection === "history";
+  const searchActionTab: Tab = showHistory ? "sessions" : "cron";
+  const searchActionLabel = showHistory ? "查看历史对话" : "查看定时任务";
+  const searchActionIcon = showHistory ? icons.history : icons.timerTask;
   const railCollapsed = vs.embedRailCollapsed;
 
   return html`
@@ -420,8 +423,8 @@ function renderEmbedLeftRail(props: ChatProps, requestUpdate: () => void) {
               ?disabled=${!props.connected}
               @click=${props.onNewSession}
             >
-              <span aria-hidden="true">＋</span>
-              新对话
+              <span class="chat-embed-rail__new-icon" aria-hidden="true">${icons.edit}</span>
+              新建会话
             </button>
 
             <div class="chat-embed-rail__tabs">
@@ -447,9 +450,10 @@ function renderEmbedLeftRail(props: ChatProps, requestUpdate: () => void) {
               </button>
             </div>
 
-            <label class="chat-embed-rail__search">
+            <div class="chat-embed-rail__search">
               <input
                 type="search"
+                aria-label="搜索对话"
                 .value=${vs.embedRailQuery}
                 placeholder="搜索对话"
                 @input=${(event: Event) => {
@@ -457,7 +461,17 @@ function renderEmbedLeftRail(props: ChatProps, requestUpdate: () => void) {
                   requestUpdate();
                 }}
               />
-            </label>
+              <button
+                type="button"
+                class="chat-embed-rail__search-action"
+                title=${searchActionLabel}
+                aria-label=${searchActionLabel}
+                ?disabled=${!props.onNavigateToTab}
+                @click=${() => props.onNavigateToTab?.(searchActionTab)}
+              >
+                ${searchActionIcon}
+              </button>
+            </div>
 
             <div class="chat-embed-rail__list">
               ${showHistory

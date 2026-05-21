@@ -128,3 +128,25 @@ pnpm test                 # 运行测试
 pnpm check                # 代码检查
 pnpm format               # 格式化
 ```
+
+## 8. 重启 Gateway
+
+在终端中按 `Ctrl+C` 停止当前运行的 Gateway，然后重新启动：
+
+```bash
+pnpm dev gateway
+```
+
+如果只需要重启而不重新构建全部 TypeScript，可以使用跳过渠道的快速模式：
+
+```bash
+pnpm gateway:dev
+```
+
+启动成功标志：
+
+```
+[gateway] agent model: zai/glm-5.1
+[gateway] http server listening
+[gateway] ready
+```
