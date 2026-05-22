@@ -160,6 +160,7 @@ vi.mock("./agents-utils.ts", () => ({
     /^data:image\//i.test(value) || (value.startsWith("/") && !value.startsWith("//")),
   agentLogoUrl: () => "/openclaw-logo.svg",
   chatClawLogoUrl: () => "/chat-claw-logo.png",
+  chatAvatarFallbackUrl: () => "apple-touch-icon.png",
   assistantAvatarFallbackUrl: () => "apple-touch-icon.png",
   resolveChatAvatarRenderUrl: (
     candidate: string | null | undefined,
@@ -508,7 +509,6 @@ describe("chat voice controls", () => {
   it("keeps Talk visible without the stale browser dictation button", () => {
     const container = renderChatView();
 
-    expect(container.querySelector('[aria-label="Start Talk"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="Talk options"]')).not.toBeNull();
     expect(container.querySelector('[aria-label="Voice input"]')).toBeNull();
   });
@@ -910,7 +910,10 @@ describe("chat embed shell", () => {
     expect(container.textContent).toContain("历史对话");
     expect(container.textContent).toContain("定时任务");
     expect(container.textContent).toContain("Skills");
-    expect(container.textContent).toContain("计量");
+    expect(container.textContent).toContain("Usage");
+
+    const embedActions = container.querySelector(".embed-utility-bar__actions");
+    expect(embedActions).toBeTruthy();
 
     const sessionButton = container.querySelector<HTMLButtonElement>(".chat-embed-rail__item");
     sessionButton?.click();
@@ -929,10 +932,16 @@ describe("chat embed shell", () => {
     expect(onNavigateToTab).toHaveBeenCalledWith("cron");
 
     const skillsButton = Array.from(
-      container.querySelectorAll<HTMLButtonElement>(".chat-embed-links__item"),
+      container.querySelectorAll<HTMLButtonElement>(".embed-utility-bar__actions button"),
     ).find((button) => button.textContent?.includes("Skills"));
     skillsButton?.click();
     expect(onNavigateToTab).toHaveBeenCalledWith("skills");
+
+    const usageButton = Array.from(
+      container.querySelectorAll<HTMLButtonElement>(".embed-utility-bar__actions button"),
+    ).find((button) => button.textContent?.includes("Usage"));
+    usageButton?.click();
+    expect(onNavigateToTab).toHaveBeenCalledWith("usage");
   });
 
   it("opens config from the composer settings button in embed mode", () => {

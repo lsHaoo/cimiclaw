@@ -147,6 +147,7 @@ import { loadLocalAssistantIdentity } from "./storage.ts";
 import { normalizeOptionalString } from "./string-coerce.ts";
 import { isRenderableControlUiAvatarUrl } from "./views/agents-utils.ts";
 import { agentLogoUrl } from "./views/agents-utils.ts";
+import { renderEmbedUtilityActions } from "./views/embed-utility-actions.ts";
 import {
   resolveAgentConfig,
   resolveConfiguredCronModelSuggestions,
@@ -1602,10 +1603,10 @@ export function renderApp(state: AppViewState) {
                 </svg>
                 Chat
               </button>
-              <div class="embed-utility-bar__actions">
-                <button type="button" class="${state.tab === "skills" ? "button--active" : ""}" @click=${() => state.setTab("skills")}>Skills</button>
-                <button type="button" class="${state.tab === "usage" ? "button--active" : ""}" @click=${() => state.setTab("usage")}>使用情况</button>
-              </div>
+              ${renderEmbedUtilityActions({
+                activeTab: state.tab === "skills" || state.tab === "usage" ? state.tab : null,
+                onNavigate: (tab) => state.setTab(tab),
+              })}
             </div>`
           : nothing}
         ${state.tab === "config" || state.embedMode

@@ -53,6 +53,7 @@ import { detectTextDirection } from "../text-direction.ts";
 import type { CronJob, SessionsListResult } from "../types.ts";
 import type { ChatAttachment, ChatQueueItem } from "../ui-types.ts";
 import { resolveLocalUserName } from "../user-identity.ts";
+import { renderEmbedUtilityActions } from "./embed-utility-actions.ts";
 import { renderMarkdownSidebar } from "./markdown-sidebar.ts";
 import "../components/resizable-divider.ts";
 
@@ -351,24 +352,10 @@ function renderEmbedUtilityLinks(props: ChatProps) {
   if (!props.embedMode || !props.onNavigateToTab) {
     return nothing;
   }
-  return html`
-    <div class="chat-embed-links">
-      <button
-        type="button"
-        class="chat-embed-links__item"
-        @click=${() => props.onNavigateToTab?.("skills")}
-      >
-        Skills
-      </button>
-      <button
-        type="button"
-        class="chat-embed-links__item"
-        @click=${() => props.onNavigateToTab?.("usage")}
-      >
-        计量
-      </button>
-    </div>
-  `;
+  return renderEmbedUtilityActions({
+    activeTab: null,
+    onNavigate: (tab) => props.onNavigateToTab?.(tab),
+  });
 }
 
 function renderEmbedLeftRail(props: ChatProps, requestUpdate: () => void) {
