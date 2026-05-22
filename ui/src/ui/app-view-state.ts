@@ -59,6 +59,7 @@ export type AppViewState = {
   basePath: string;
   embedMode: boolean;
   connected: boolean;
+  initialConnectionPending: boolean;
   theme: ThemeName;
   themeMode: ThemeMode;
   themeResolved: ResolvedTheme;

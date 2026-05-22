@@ -178,6 +178,7 @@ export class OpenClawApp extends LitElement {
   @state() onboarding = resolveOnboardingMode();
   @state() embedMode = resolveEmbedMode();
   @state() connected = false;
+  @state() initialConnectionPending = true;
   @state() theme: ThemeName = this.settings.theme ?? "ocean";
   @state() themeMode: ThemeMode = this.settings.themeMode ?? "system";
   @state() themeResolved: ResolvedTheme = "dark";

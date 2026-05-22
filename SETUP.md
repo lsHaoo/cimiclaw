@@ -92,7 +92,7 @@ OPENCLAW_ALLOW_INSECURE_PRIVATE_WS=1 pnpm dev gateway -- --bind 0.0.0.0
 | **Gateway 内置 UI** | http://127.0.0.1:18789/ | Gateway 自带静态 UI（需先 `pnpm ui:build`） |
 | **健康检查** | http://127.0.0.1:18789/healthz | Gateway 健康状态 |
 
-首次访问会显示登录页面（CimiClaw 品牌）。由于已配置免认证（`auth.mode: none`），直接点击 **Connect** 按钮即可进入聊天界面，无需填写 Token。
+首次访问会先显示加载中的欢迎页，然后自动连接 Gateway。若已配置免认证（`auth.mode: none`），通常会直接进入聊天界面，无需填写 Token；只有首连失败时才需要回到登录页面手动处理。
 
 ### 内嵌模式（Embed Mode）
 

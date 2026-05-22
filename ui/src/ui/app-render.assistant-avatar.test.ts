@@ -63,6 +63,7 @@ function createState(overrides: Partial<AppViewState> = {}): AppViewState {
     onboarding: false,
     basePath: "",
     connected: true,
+    initialConnectionPending: false,
     theme: "claw",
     themeMode: "dark",
     themeResolved: "dark",
@@ -215,6 +216,24 @@ beforeEach(() => {
 });
 
 describe("renderApp assistant avatar routing", () => {
+  it("shows the loading gate while the first gateway connect is still pending", () => {
+    const container = document.createElement("div");
+
+    render(renderApp(createState({ connected: false, initialConnectionPending: true })), container);
+
+    expect(container.querySelector(".login-gate__loading")).toBeTruthy();
+    expect(container.querySelector(".login-gate__form")).toBeNull();
+  });
+
+  it("shows the login form after the first gateway connect fails", () => {
+    const container = document.createElement("div");
+
+    render(renderApp(createState({ connected: false, initialConnectionPending: false })), container);
+
+    expect(container.querySelector(".login-gate__loading")).toBeNull();
+    expect(container.querySelector(".login-gate__form")).toBeTruthy();
+  });
+
   it("passes the browser-local assistant override to Quick Settings ahead of stale identity metadata", () => {
     const dataUrl = "data:image/png;base64,bG9jYWwtYXNzaXN0YW50";
     saveLocalAssistantIdentity({ avatar: dataUrl });

@@ -141,6 +141,7 @@ function createHost(): TestGatewayHost {
     clientInstanceId: "instance-test",
     client: null,
     connected: false,
+    initialConnectionPending: true,
     hello: null,
     lastError: null,
     lastErrorCode: null,
@@ -667,10 +668,27 @@ describe("connectGateway", () => {
     connectGateway(host);
     const client = requireGatewayClient();
 
+    expect(host.initialConnectionPending).toBe(true);
+
     client.emitHello();
 
+    expect(host.initialConnectionPending).toBe(false);
     expect(loadControlUiBootstrapConfigMock).toHaveBeenCalledTimes(1);
     expect(loadControlUiBootstrapConfigMock).toHaveBeenCalledWith(host, { applyIdentity: false });
+  });
+
+  it("stops treating the first gateway connect as pending after an initial failure", () => {
+    const host = createHost();
+
+    connectGateway(host);
+    const client = requireGatewayClient();
+
+    expect(host.initialConnectionPending).toBe(true);
+
+    client.emitClose({ code: 1006 });
+
+    expect(host.initialConnectionPending).toBe(false);
+    expect(host.lastError).toBe("disconnected (1006): no reason");
   });
 
   it("falls back from restored unconfigured agent sessions before refreshing chat", async () => {

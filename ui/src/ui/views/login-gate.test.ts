@@ -5,12 +5,17 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { ConnectErrorDetailCodes } from "../../../../src/gateway/protocol/connect-error-details.js";
 import { i18n } from "../../i18n/index.ts";
 import type { AppViewState } from "../app-view-state.ts";
-import { renderLoginGate, resolveLoginFailureFeedback } from "./login-gate.ts";
+import {
+  renderLoginGate,
+  renderPendingConnectionGate,
+  resolveLoginFailureFeedback,
+} from "./login-gate.ts";
 
 function createState(overrides: Partial<AppViewState> = {}): AppViewState {
   return {
     basePath: "",
     connected: false,
+    initialConnectionPending: false,
     lastError: null,
     lastErrorCode: null,
     loginShowGatewayToken: false,
@@ -197,5 +202,18 @@ describe("renderLoginGate", () => {
     expect(alert?.textContent).toContain("openclaw dashboard");
     expect(alert?.querySelector("details")?.textContent).toContain("protocol mismatch");
     expect(alert?.querySelector("a")?.getAttribute("href")).toContain("docs.openclaw.ai");
+  });
+
+  it("renders a loading gate while the first gateway connect is pending", async () => {
+    const container = document.createElement("div");
+    const state = createState();
+
+    render(renderPendingConnectionGate(state), container);
+    await Promise.resolve();
+
+    expect(container.querySelector(".login-gate__loading")).toBeTruthy();
+    expect(container.querySelector(".login-gate__form")).toBeNull();
+    expect(container.textContent).toContain("Loading");
+    expect(container.textContent).toContain("ws://127.0.0.1:18789");
   });
 });

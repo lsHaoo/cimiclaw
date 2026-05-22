@@ -269,6 +269,45 @@ function renderLoginFailure(feedback: LoginFailureFeedback) {
   `;
 }
 
+export function renderPendingConnectionGate(
+  state: Pick<AppViewState, "basePath" | "settings">,
+) {
+  const basePath = normalizeBasePath(state.basePath ?? "");
+  const faviconSrc = agentLogoUrl(basePath);
+  const gatewayUrl = state.settings.gatewayUrl.trim();
+
+  return html`
+    <div class="login-gate" data-state="connecting">
+      <div class="login-gate__card">
+        <div class="login-gate__header">
+          <img class="login-gate__logo" src=${faviconSrc} alt="CimiClaw" />
+          <div class="login-gate__title">CimiClaw</div>
+          <div class="login-gate__sub">${t("login.subtitle")}</div>
+        </div>
+        <div class="login-gate__loading" role="status" aria-live="polite" aria-busy="true">
+          <div class="login-gate__loading-title">${t("common.loading")}</div>
+          <div class="login-gate__loading-sub">
+            ${gatewayUrl || t("overview.access.wsUrl")}
+          </div>
+          ${gatewayUrl
+            ? html`
+                <div class="login-gate__loading-endpoint mono">
+                  <span>${t("overview.access.wsUrl")}</span>
+                  <code>${gatewayUrl}</code>
+                </div>
+              `
+            : ""}
+          <div class="login-gate__loading-skeleton" aria-hidden="true">
+            <div class="skeleton skeleton-line skeleton-line--long"></div>
+            <div class="skeleton skeleton-line skeleton-line--medium"></div>
+            <div class="skeleton skeleton-line skeleton-line--short"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 export function renderLoginGate(state: AppViewState) {
   const basePath = normalizeBasePath(state.basePath ?? "");
   const faviconSrc = agentLogoUrl(basePath);

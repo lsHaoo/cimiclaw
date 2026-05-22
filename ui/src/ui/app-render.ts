@@ -168,7 +168,7 @@ import { renderDreamingRestartConfirmation } from "./views/dreaming-restart-conf
 import { renderDreaming } from "./views/dreaming.ts";
 import { renderExecApprovalPrompt } from "./views/exec-approval.ts";
 import { renderGatewayUrlConfirmation } from "./views/gateway-url-confirmation.ts";
-import { renderLoginGate } from "./views/login-gate.ts";
+import { renderLoginGate, renderPendingConnectionGate } from "./views/login-gate.ts";
 import { renderOverview } from "./views/overview.ts";
 
 let _pendingUpdate: (() => void) | undefined;
@@ -668,7 +668,11 @@ export function renderApp(state: AppViewState) {
   // Gate: require successful gateway connection before showing the dashboard.
   // The gateway URL confirmation overlay is always rendered so URL-param flows still work.
   if (!state.connected) {
-    return html` ${renderLoginGate(state)} ${renderGatewayUrlConfirmation(state)} `;
+    const gate =
+      state.initialConnectionPending && !state.lastError
+        ? renderPendingConnectionGate(state)
+        : renderLoginGate(state);
+    return html` ${gate} ${renderGatewayUrlConfirmation(state)} `;
   }
 
   const presenceCount = state.presenceEntries.length;

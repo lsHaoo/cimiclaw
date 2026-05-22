@@ -79,6 +79,7 @@ type GatewayHost = {
   clientInstanceId: string;
   client: GatewayBrowserClient | null;
   connected: boolean;
+  initialConnectionPending: boolean;
   hello: GatewayHelloOk | null;
   lastError: string | null;
   lastErrorCode: string | null;
@@ -497,6 +498,7 @@ export function connectGateway(host: GatewayHost, options?: ConnectGatewayOption
       }
       shutdownHost.pendingShutdownMessage = null;
       host.connected = true;
+      host.initialConnectionPending = false;
       host.lastError = null;
       host.lastErrorCode = null;
       host.hello = hello;
@@ -555,6 +557,7 @@ export function connectGateway(host: GatewayHost, options?: ConnectGatewayOption
         return;
       }
       host.connected = false;
+      host.initialConnectionPending = false;
       // Code 1012 = Service Restart (expected during config saves, don't show as error)
       host.lastErrorCode =
         resolveGatewayErrorDetailCode(error) ??
