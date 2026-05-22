@@ -318,12 +318,20 @@ function createChatEphemeralState(): ChatEphemeralState {
 
 const vs = createChatEphemeralState();
 
+type ResetChatViewStateOptions = {
+  preserveEmbedRailSection?: boolean;
+};
+
 /**
  * Reset chat view ephemeral state when navigating away.
  * Clears search/slash UI that should not survive navigation.
  */
-export function resetChatViewState() {
-  Object.assign(vs, createChatEphemeralState());
+export function resetChatViewState(options: ResetChatViewStateOptions = {}) {
+  const nextState = createChatEphemeralState();
+  if (options.preserveEmbedRailSection) {
+    nextState.embedRailSection = vs.embedRailSection;
+  }
+  Object.assign(vs, nextState);
 }
 
 export const cleanupChatModuleState = resetChatViewState;

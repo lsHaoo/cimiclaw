@@ -591,7 +591,7 @@ function applyTabSelection(
 
   // Cleanup chat module state when navigating away from chat
   if (prev === "chat" && next !== "chat") {
-    resetChatViewState();
+    resetChatViewState({ preserveEmbedRailSection: Boolean(host.embedMode) });
   }
 
   if (next === "chat") {

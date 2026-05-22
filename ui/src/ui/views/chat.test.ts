@@ -944,6 +944,46 @@ describe("chat embed shell", () => {
     expect(onNavigateToTab).toHaveBeenCalledWith("usage");
   });
 
+  it("preserves the embed rail section while clearing search on reset", () => {
+    const embedProps: Partial<Parameters<typeof renderChat>[0]> = {
+      embedMode: true,
+      sessions: {
+        ts: 0,
+        path: "",
+        count: 1,
+        defaults: { modelProvider: "openai", model: "gpt-5", contextTokens: null },
+        sessions: [{ key: "agent:main:plan", kind: "direct", updatedAt: 10 }],
+      },
+    };
+
+    let container = renderChatView(embedProps);
+    const cronTab = Array.from(
+      container.querySelectorAll<HTMLButtonElement>(".chat-embed-rail__tab"),
+    ).find((button) => button.textContent?.includes("定时任务"));
+    cronTab?.click();
+
+    container = renderChatView(embedProps);
+    const searchInput = container.querySelector<HTMLInputElement>(
+      '.chat-embed-rail__search input[type="search"]',
+    );
+    expect(searchInput).toBeInstanceOf(HTMLInputElement);
+    searchInput!.value = "weekly";
+    searchInput!.dispatchEvent(new Event("input"));
+
+    resetChatViewState({ preserveEmbedRailSection: true });
+    container = renderChatView(embedProps);
+
+    const activeTab = container.querySelector<HTMLButtonElement>(".chat-embed-rail__tab--active");
+    expect(activeTab?.textContent).toContain("定时任务");
+    expect(
+      container.querySelector<HTMLInputElement>('.chat-embed-rail__search input[type="search"]')
+        ?.value,
+    ).toBe("");
+    expect(
+      container.querySelector<HTMLButtonElement>('[aria-label="查看定时任务"]'),
+    ).toBeInstanceOf(HTMLButtonElement);
+  });
+
   it("opens config from the composer settings button in embed mode", () => {
     const onNavigateToTab = vi.fn();
     const onToggleRealtimeTalkOptions = vi.fn();
