@@ -177,6 +177,24 @@ export class OpenClawApp extends LitElement {
   @state() tab: Tab = "chat";
   @state() onboarding = resolveOnboardingMode();
   @state() embedMode = resolveEmbedMode();
+  @state() marketplaceToken: string | null = null;
+  @state() marketplaceApiKeysLoading = false;
+  @state() marketplaceApiKeysError: string | null = null;
+  @state() marketplaceApiKeysToken: string | null = null;
+  @state() marketplaceApiKeys: Array<{
+    modelName: string;
+    modelCustomName: string;
+    modelApiKey: string;
+    createTime: string;
+    endpoint: string;
+    anthropicEndpoint: string;
+    cloudId: string;
+    contextLength: number | null;
+    outputLength: number | null;
+  }> | null = null;
+  @state() marketplaceSyncInFlight = false;
+  @state() marketplaceSyncError: string | null = null;
+  @state() marketplaceSyncFingerprint: string | null = null;
   @state() connected = false;
   @state() initialConnectionPending = true;
   @state() theme: ThemeName = this.settings.theme ?? "ocean";
@@ -265,7 +283,12 @@ export class OpenClawApp extends LitElement {
     if (!this.embedMode) {
       return;
     }
-    if (typeof window !== "undefined" && event.source && window.parent && event.source !== window.parent) {
+    if (
+      typeof window !== "undefined" &&
+      event.source &&
+      window.parent &&
+      event.source !== window.parent
+    ) {
       return;
     }
     const target = parseEmbedShellNavigationMessage(event.data);

@@ -58,6 +58,24 @@ export type AppViewState = {
   onboarding: boolean;
   basePath: string;
   embedMode: boolean;
+  marketplaceToken?: string | null;
+  marketplaceApiKeysLoading?: boolean;
+  marketplaceApiKeysError?: string | null;
+  marketplaceApiKeysToken?: string | null;
+  marketplaceApiKeys?: Array<{
+    modelName: string;
+    modelCustomName: string;
+    modelApiKey: string;
+    createTime: string;
+    endpoint: string;
+    anthropicEndpoint: string;
+    cloudId: string;
+    contextLength: number | null;
+    outputLength: number | null;
+  }> | null;
+  marketplaceSyncInFlight?: boolean;
+  marketplaceSyncError?: string | null;
+  marketplaceSyncFingerprint?: string | null;
   connected: boolean;
   initialConnectionPending: boolean;
   theme: ThemeName;

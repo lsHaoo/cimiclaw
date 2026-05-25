@@ -62,6 +62,12 @@ type SettingsHost = {
   eventLogBuffer: unknown[];
   basePath: string;
   embedMode?: boolean;
+  marketplaceToken?: string | null;
+  marketplaceApiKeysError?: string | null;
+  marketplaceApiKeysToken?: string | null;
+  marketplaceApiKeys?: unknown[] | null;
+  marketplaceSyncError?: string | null;
+  marketplaceSyncFingerprint?: string | null;
   themeMedia: MediaQueryList | null;
   themeMediaHandler: ((event: MediaQueryListEvent) => void) | null;
   logsPollInterval: number | null;
@@ -168,6 +174,12 @@ const createHost = (tab: Tab): SettingsHost => ({
   eventLog: [],
   eventLogBuffer: [],
   basePath: "",
+  marketplaceToken: null,
+  marketplaceApiKeysError: null,
+  marketplaceApiKeysToken: null,
+  marketplaceApiKeys: null,
+  marketplaceSyncError: null,
+  marketplaceSyncFingerprint: null,
   themeMedia: null,
   themeMediaHandler: null,
   logsPollInterval: null,
@@ -526,6 +538,34 @@ describe("applySettingsFromUrl", () => {
     expect(host.embedMode).toBe(true);
     expect(host.sessionKey).toBe("agent:main:work");
     expect(window.location.search).toBe("?embed=1&session=agent%3Amain%3Awork");
+  });
+
+  it("hydrates marketplace accessToken without affecting gateway token", () => {
+    setTestWindowUrl(
+      "https://control.example/ui/overview?accessToken=market-token&password=sekret",
+    );
+    const host = createHost("overview");
+    host.settings.token = "gateway-token";
+
+    applySettingsFromUrl(host);
+
+    expect(host.marketplaceToken).toBe("market-token");
+    expect(host.settings.token).toBe("gateway-token");
+    expect(window.location.search).toBe("");
+  });
+
+  it("hydrates gateway token and marketplace accessToken independently", () => {
+    setTestWindowUrl(
+      "https://control.example/ui/overview?accessToken=query-market#token=gateway-token",
+    );
+    const host = createHost("overview");
+
+    applySettingsFromUrl(host);
+
+    expect(host.marketplaceToken).toBe("query-market");
+    expect(host.settings.token).toBe("gateway-token");
+    expect(window.location.search).toBe("");
+    expect(window.location.hash).toBe("");
   });
 
   it("preserves embed mode when syncing tab URLs", () => {

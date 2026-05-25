@@ -84,7 +84,8 @@
     }
 
     const gatewayOrigin = resolveGatewayOrigin();
-    const iframeSrc = `${gatewayOrigin}/chat?session=agent%3Amain%3Amain&embed=1`;
+    const accessToken = new URLSearchParams(window.location.search).get("token") || "";
+    const iframeSrc = `${gatewayOrigin}/chat?session=agent%3Amain%3Amain&embed=1${accessToken ? "&accessToken=" + encodeURIComponent(accessToken) : ""}`;
     frame.src = iframeSrc;
     gatewayUrlEl.textContent = iframeSrc;
 

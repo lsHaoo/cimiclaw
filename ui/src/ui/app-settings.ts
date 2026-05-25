@@ -53,6 +53,7 @@ import { loadSessions, type SessionsState } from "./controllers/sessions.ts";
 import { loadSkills, type SkillsState } from "./controllers/skills.ts";
 import { loadUsage, type UsageState } from "./controllers/usage.ts";
 import { syncCustomThemeStyleTag } from "./custom-theme.ts";
+import { resolveEmbedShellMode, setEmbedShellParam } from "./embed-shell.ts";
 import { isMonitoredAuthProvider } from "./model-auth-helpers.ts";
 import {
   inferBasePathFromPathname,
@@ -62,7 +63,6 @@ import {
   tabFromPath,
   type Tab,
 } from "./navigation.ts";
-import { resolveEmbedShellMode, setEmbedShellParam } from "./embed-shell.ts";
 import {
   saveLocalUserIdentity,
   saveSettings,
@@ -96,6 +96,12 @@ type SettingsHost = {
   eventLogBuffer: unknown[];
   basePath: string;
   embedMode?: boolean;
+  marketplaceToken?: string | null;
+  marketplaceApiKeysError?: string | null;
+  marketplaceApiKeysToken?: string | null;
+  marketplaceApiKeys?: Array<unknown> | null;
+  marketplaceSyncError?: string | null;
+  marketplaceSyncFingerprint?: string | null;
   agentsList?: AgentsListResult | null;
   agentsSelectedId?: string | null;
   agentsPanel?: "overview" | "files" | "tools" | "skills" | "channels" | "cron";
@@ -194,6 +200,21 @@ function applySessionSelection(host: SettingsHost, session: string) {
 /** Set to true when the token is read from a query string (?token=) instead of a URL fragment. */
 export let warnQueryToken = false;
 
+function applyMarketplaceAccessToken(host: SettingsHost, token: string | null | undefined) {
+  const normalized = normalizeOptionalString(token) ?? null;
+  if (host.marketplaceToken === normalized) {
+    return;
+  }
+  host.marketplaceToken = normalized;
+  host.marketplaceApiKeysError = null;
+  host.marketplaceSyncError = null;
+  host.marketplaceSyncFingerprint = null;
+  if (host.marketplaceApiKeysToken !== normalized) {
+    host.marketplaceApiKeys = null;
+    host.marketplaceApiKeysToken = null;
+  }
+}
+
 export function applySettingsFromUrl(host: SettingsHost) {
   if (!window.location.search && !window.location.hash) {
     return;
@@ -206,6 +227,9 @@ export function applySettingsFromUrl(host: SettingsHost) {
   const gatewayUrlRaw = params.get("gatewayUrl") ?? hashParams.get("gatewayUrl");
   const nextGatewayUrl = normalizeOptionalString(gatewayUrlRaw) ?? "";
   const gatewayUrlChanged = Boolean(nextGatewayUrl && nextGatewayUrl !== host.settings.gatewayUrl);
+  const accessToken = normalizeOptionalString(
+    hashParams.get("accessToken") ?? params.get("accessToken"),
+  );
   // Prefer fragment tokens over query tokens. Fragments avoid server-side request
   // logs and referrer leakage; query-param tokens remain a one-time legacy fallback
   // for compatibility with older deep links.
@@ -216,6 +240,13 @@ export function applySettingsFromUrl(host: SettingsHost) {
   const session = normalizeOptionalString(params.get("session") ?? hashParams.get("session"));
   const shouldResetSessionForToken = Boolean(token && !session && !gatewayUrlChanged);
   let shouldCleanUrl = false;
+
+  if (params.has("accessToken") || hashParams.has("accessToken")) {
+    applyMarketplaceAccessToken(host, accessToken);
+    params.delete("accessToken");
+    hashParams.delete("accessToken");
+    shouldCleanUrl = true;
+  }
 
   if (params.has("token")) {
     params.delete("token");

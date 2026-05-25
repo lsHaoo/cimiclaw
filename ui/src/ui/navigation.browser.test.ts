@@ -656,4 +656,14 @@ describe("control UI routing", () => {
 
     expectConfirmedGatewayChange(app);
   });
+
+  it("hydrates marketplace accessToken separately from the gateway hash token", async () => {
+    const app = mountApp("/ui/overview?accessToken=market-token#token=gateway-token");
+    await app.updateComplete;
+
+    expect(app.marketplaceToken).toBe("market-token");
+    expect(app.settings.token).toBe("gateway-token");
+    expect(window.location.search).toBe("");
+    expect(window.location.hash).toBe("");
+  });
 });

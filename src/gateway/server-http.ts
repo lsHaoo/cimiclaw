@@ -231,7 +231,7 @@ function isSessionHistoryPath(pathname: string): boolean {
   return /^\/sessions\/[^/]+\/history$/.test(pathname);
 }
 
-function shouldEnforceDefaultPluginGatewayAuth(pathContext: PluginRoutePathContext): boolean {
+function shouldEnforceDefaultPluginGatewayAuth(pathContext: PluginRoutePathContext) {
   return (
     pathContext.malformedEncoding ||
     pathContext.decodePassLimitReached ||

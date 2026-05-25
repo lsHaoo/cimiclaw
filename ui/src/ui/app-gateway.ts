@@ -45,6 +45,10 @@ import {
   removeExecApproval,
 } from "./controllers/exec-approval.ts";
 import { loadHealthState, type HealthState } from "./controllers/health.ts";
+import {
+  syncMarketplaceModels,
+  type MarketplaceApiKeyEntry,
+} from "./controllers/marketplace-model-sync.ts";
 import { loadNodes, type NodesState } from "./controllers/nodes.ts";
 import {
   applySessionsChangedEvent,
@@ -101,6 +105,14 @@ type GatewayHost = {
   assistantAvatar: string | null;
   assistantAgentId: string | null;
   serverVersion: string | null;
+  marketplaceToken: string | null;
+  marketplaceApiKeysLoading: boolean;
+  marketplaceApiKeysError: string | null;
+  marketplaceApiKeysToken: string | null;
+  marketplaceApiKeys: MarketplaceApiKeyEntry[] | null;
+  marketplaceSyncInFlight: boolean;
+  marketplaceSyncError: string | null;
+  marketplaceSyncFingerprint: string | null;
   pendingUpdateExpectedVersion: string | null;
   updateStatusBanner: { tone: "danger" | "warn" | "info"; text: string } | null;
   sessionKey: string;
@@ -548,6 +560,7 @@ export function connectGateway(host: GatewayHost, options?: ConnectGatewayOption
       void loadNodes(host as unknown as NodesState, { quiet: true });
       void loadDevices(host as unknown as DevicesState, { quiet: true });
       void loadAgentsThenRefreshActiveTab(host);
+      void syncMarketplaceModels(host as unknown as Parameters<typeof syncMarketplaceModels>[0]);
       // Re-run push reconciliation now that the gateway client is available.
       void host.reconcileWebPushState?.();
       void verifyPendingUpdateVersion(host, client);

@@ -17,6 +17,7 @@ import {
 } from "./app-settings.ts";
 import { startControlUiResponsivenessObserver } from "./control-ui-performance.ts";
 import { loadControlUiBootstrapConfig } from "./controllers/control-ui-bootstrap.ts";
+import { loadMarketplaceApiKeys } from "./controllers/marketplace-model-sync.ts";
 import type { Tab } from "./navigation.ts";
 
 type LifecycleHost = {
@@ -35,6 +36,16 @@ type LifecycleHost = {
   localMediaPreviewRoots: string[];
   embedSandboxMode: "strict" | "scripts" | "trusted";
   allowExternalEmbedUrls: boolean;
+  marketplaceToken: string | null;
+  marketplaceApiKeysLoading: boolean;
+  marketplaceApiKeysError: string | null;
+  marketplaceApiKeysToken: string | null;
+  marketplaceApiKeys:
+    | import("./controllers/marketplace-model-sync.ts").MarketplaceApiKeyEntry[]
+    | null;
+  marketplaceSyncInFlight: boolean;
+  marketplaceSyncError: string | null;
+  marketplaceSyncFingerprint: string | null;
   chatHasAutoScrolled: boolean;
   chatManualRefreshInFlight: boolean;
   realtimeTalkSession?: { stop: () => void } | null;
@@ -56,12 +67,14 @@ type LifecycleHost = {
   controlUiResponsivenessObserver?: { disconnect: () => void } | null;
   popStateHandler: () => void;
   topbarObserver: ResizeObserver | null;
+  requestUpdate?: () => void;
 };
 
 export function handleConnected(host: LifecycleHost) {
   const connectGeneration = ++host.connectGeneration;
   host.basePath = inferBasePath();
   applySettingsFromUrl(host as unknown as Parameters<typeof applySettingsFromUrl>[0]);
+  void loadMarketplaceApiKeys(host as unknown as Parameters<typeof loadMarketplaceApiKeys>[0]);
   const bootstrapReady = loadControlUiBootstrapConfig(host);
   syncTabWithLocation(host as unknown as Parameters<typeof syncTabWithLocation>[0], true);
   syncThemeWithSettings(host as unknown as Parameters<typeof syncThemeWithSettings>[0]);
