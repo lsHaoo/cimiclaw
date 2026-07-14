@@ -32,7 +32,7 @@ jobs:
           token: ${{ secrets.OPENCLAW_DOCS_SYNC_TOKEN || github.token }}
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v6.4.0
         with:
           node-version: "22.18.0"
 
